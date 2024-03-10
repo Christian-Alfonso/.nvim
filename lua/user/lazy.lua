@@ -12,6 +12,10 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- Lazy will handle which plugins need to be loaded for normal
+-- Neovim and the VSCode plugin through the "cond" property for
+-- each one, but to update plugins, Lazy still needs to be used
+-- through normal Neovim, as it cannot be accessed in VSCode
 require("lazy").setup({
     -- Theme plugin, default VSCode color scheme
     {
@@ -20,7 +24,8 @@ require("lazy").setup({
         priority = 1000,
         init = function()
             require("user.theme")
-        end
+        end,
+        cond = not vim.g.vscode,
     },
 
     -- Telescope allows for searching by filename
@@ -35,7 +40,8 @@ require("lazy").setup({
         },
         init = function()
             require("user.plugin.telescope")
-        end
+        end,
+        cond = not vim.g.vscode,
     },
 
     -- Treesitter provides syntax tree highlighting based
@@ -44,7 +50,7 @@ require("lazy").setup({
         'nvim-treesitter/nvim-treesitter',
         init = function()
             require("user.plugin.treesitter")
-        end
+        end,
         -- The following function updates Treesitter automatically,
         -- which can be annoying since Lazy is being called on every
         -- startup of Neovim. Run ":TSUpdate" manually for updates.
@@ -52,6 +58,7 @@ require("lazy").setup({
         --     local ts_update = require('nvim-treesitter.install').update({ with_sync = true })
         --     ts_update()
         -- end,
+        cond = not vim.g.vscode,
     },
 
     -- Harpoon allows for marking and quick navigation of
@@ -62,7 +69,8 @@ require("lazy").setup({
         dependencies = { 'nvim-lua/plenary.nvim' },
         init = function()
             require("user.plugin.harpoon")
-        end
+        end,
+        cond = not vim.g.vscode,
     },
 
     -- Fugitive gives basic Git integration and utilizes
@@ -71,7 +79,8 @@ require("lazy").setup({
         'tpope/vim-fugitive',
         init = function()
             require("user.plugin.fugitive")
-        end
+        end,
+        cond = not vim.g.vscode,
     },
 
     -- Undotree allows you to persist file changes for later
@@ -80,7 +89,8 @@ require("lazy").setup({
         'mbbill/undotree',
         init = function()
             require("user.plugin.undotree")
-        end
+        end,
+        cond = not vim.g.vscode,
     },
 
     -- LSP Zero uses all of the following includes for installing
@@ -95,11 +105,13 @@ require("lazy").setup({
         init = function()
             require("user.plugin.lsp-zero")
         end,
+        cond = not vim.g.vscode,
     },
     {
         'williamboman/mason.nvim',
         lazy = false,
         config = true,
+        cond = not vim.g.vscode,
     },
 
     -- Autocompletion
@@ -111,7 +123,8 @@ require("lazy").setup({
         },
         config = function()
             require("user.plugin.cmp")
-        end
+        end,
+        cond = not vim.g.vscode,
     },
 
     -- LSP
@@ -125,7 +138,8 @@ require("lazy").setup({
         },
         config = function()
             require("user.plugin.lspconfig")
-        end
+        end,
+        cond = not vim.g.vscode,
     },
     -- ##############################################################
 
@@ -135,7 +149,8 @@ require("lazy").setup({
         'lewis6991/gitsigns.nvim',
         init = function()
             require("user.plugin.gitsigns")
-        end
+        end,
+        cond = not vim.g.vscode,
     },
 
     -- Comment allows easy commenting/uncommenting of lines of code
@@ -145,6 +160,24 @@ require("lazy").setup({
         lazy = false,
         init = function()
             require("user.plugin.comment")
+        end,
+        cond = not vim.g.vscode,
+    },
+
+    -------------------------------
+    -- VSCode compatible plugins --
+    -------------------------------
+
+    -- Surround allows easy surrounding of text with common paired characters like
+    -- ", ', (, [, {, etc. Since it is text only, it is compatible with VSCode.
+    {
+        "kylechui/nvim-surround",
+        version = "*", -- Use for stability; omit to use `main` branch for the latest features
+        event = "VeryLazy",
+        config = function()
+            require("nvim-surround").setup({
+                -- Configuration here, or leave empty to use defaults
+            })
         end
     }
 })

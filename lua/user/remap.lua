@@ -4,8 +4,6 @@ vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 
 vim.keymap.set("n", "J", "mzJ`z")
-vim.keymap.set("n", "<C-d>", "<C-d>zz")
-vim.keymap.set("n", "<C-u>", "<C-u>zz")
 vim.keymap.set("n", "n", "nzzzv")
 vim.keymap.set("n", "N", "Nzzzv")
 
@@ -37,7 +35,10 @@ vim.keymap.set("n", "<C-p>", "<cmd>cprev<CR>zz")
 vim.keymap.set("n", "<leader>n", "<cmd>lnext<CR>zz")
 vim.keymap.set("n", "<leader>p", "<cmd>lprev<CR>zz")
 
-vim.keymap.set("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>")
+-- Original version, but "/gI" option doesn't seem to matter when using "%" to select
+-- the entire file, so not sure why it would be needed
+-- vim.keymap.set("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>")
+vim.keymap.set("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>")
 
 vim.keymap.set('v', '/', function()
     -- Get existing content from register 'v'
@@ -132,6 +133,11 @@ if vim.g.vscode then
     end);
 else
     -- ordinary Neovim
+
+    vim.keymap.set("n", "<C-d>", "<C-d>zz")
+    vim.keymap.set("n", "<C-u>", "<C-u>zz")
+    vim.keymap.set("n", "<C-f>", "<C-f>zz")
+    vim.keymap.set("n", "<C-b>", "<C-b>zz")
 
     vim.keymap.set("n", "<leader>e", function()
         vim.diagnostic.open_float()
