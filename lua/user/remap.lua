@@ -139,6 +139,11 @@ else
     vim.keymap.set("n", "<C-f>", "<C-f>zz")
     vim.keymap.set("n", "<C-b>", "<C-b>zz")
 
+    vim.keymap.set("n", "<C-Up>", "<C-w><Up>")
+    vim.keymap.set("n", "<C-Down>", "<C-w><Down>")
+    vim.keymap.set("n", "<C-Left>", "<C-w><Left>")
+    vim.keymap.set("n", "<C-Right>", "<C-w><Right>")
+
     vim.keymap.set("n", "<leader>e", function()
         vim.diagnostic.open_float()
     end)
