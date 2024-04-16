@@ -62,12 +62,50 @@ end)
 -- The remaining keymaps are behavior specific to either
 -- the Neovim extension in VSCode or real Neovim
 if vim.g.vscode then
-    -- VSCode extension - only need to remap leader
-    -- keybindings, since the rest can be handled in
-    -- VSCode's native keybindings editor (can't rebind
-    -- leader key to be a layer key like CTRL or SHIFT)
+    -- VSCode extension
+
     local vscode = require('vscode-neovim')
 
+    -- Allow VSCode to handle opening new line commands, because otherwise both Neovim
+    -- and VSCode will try to add autoindents to the same buffer, leading to empty
+    -- lines with trailing whitespace
+    --
+    -- Notes: This rebind cannot be done from VSCode because rebinding any normal character like
+    -- 'o' results in not being able to type that character without accidentally triggering the
+    -- command (unless careful mode conditions are set, which is challenging to do for every mode
+    -- other than normal). Furthermore, the rebind cannot use a Lua function to make this more
+    -- readable, because vim.cmd.normal causes crashing and repeated character typing loops
+    -- (possibly misuse of noremap, recursive calling the mapping).
+    vim.keymap.set("n", "o", function()
+        if vim.v.count1 == 1 then
+            return
+            "<Cmd>lua require('vscode-neovim').action('editor.action.insertLineAfter')<CR>i"
+        else
+            return "o"
+        end
+    end, { expr = true })
+
+    vim.keymap.set("n", "O", function()
+        if vim.v.count1 == 1 then
+            return
+            "<Cmd>lua require('vscode-neovim').action('editor.action.insertLineBefore')<CR>i"
+        else
+            return "O"
+        end
+    end, { expr = true })
+
+    vim.keymap.set("n", "S", function()
+        if vim.v.count1 == 1 then
+            return
+            "<Cmd>lua require('vscode-neovim').action('editor.action.deleteLines') require('vscode-neovim').action('editor.action.insertLineBefore')<CR>i"
+        else
+            return "S"
+        end
+    end, { expr = true })
+
+    -- Mostly only need to remap leader keybindings, since the
+    -- rest can be handled in VSCode's native keybindings
+    -- editor (can't rebind leader key to be a layer key like CTRL or SHIFT)
     vim.keymap.set("n", "<leader>e", function()
         vscode.action("editor.action.showHover")
     end)
