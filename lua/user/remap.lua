@@ -4,15 +4,26 @@ vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 
 vim.keymap.set("n", "J", "mzJ`z")
+
+-- Center viewport when using n/N to navigate
+-- to next/previous thing with find mode
 vim.keymap.set("n", "n", "nzzzv")
 vim.keymap.set("n", "N", "Nzzzv")
 
+-- <leader>p can be used to paste lines from Neovim's paste
+-- buffer without also cutting the lines being pasted over
+-- (preserves whatever you just pasted)
 vim.keymap.set("x", "<leader>p", "\"_dP")
 
+-- <leader>y can be used to yank to system clipboard
+-- instead of Neovim's local paste buffer
 vim.keymap.set("n", "<leader>y", "\"+y")
 vim.keymap.set("v", "<leader>y", "\"+y")
 vim.keymap.set("n", "<leader>Y", "\"+Y")
 
+-- <leader>d can be used to delete the current lines
+-- without adding it to Neovim's local paste buffer
+-- (preserves whatever you already yanked)
 vim.keymap.set("n", "<leader>d", "\"_d")
 vim.keymap.set("v", "<leader>d", "\"_d")
 
@@ -30,15 +41,15 @@ vim.keymap.set("n", "Q", "<nop>")
 -- but uncomment for this shortcut
 -- vim.keymap.set("n", "<C-f>", "<cmd>silent !wt -w 0 nt<CR>")
 
-vim.keymap.set("n", "<C-n>", "<cmd>cnext<CR>zz")
-vim.keymap.set("n", "<C-p>", "<cmd>cprev<CR>zz")
-vim.keymap.set("n", "<leader>n", "<cmd>lnext<CR>zz")
-vim.keymap.set("n", "<leader>p", "<cmd>lprev<CR>zz")
-
 -- Original version, but "/gI" option doesn't seem to matter when using "%" to select
 -- the entire file, so not sure why it would be needed
 -- vim.keymap.set("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>")
 vim.keymap.set("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>")
+
+-- Rebind increment/decrement number to +/- keys, so that
+-- those control key mappings can be used by Tmux instead
+vim.keymap.set("n", "+", "<C-a>", { desc = "Increment numbers", noremap = true })
+vim.keymap.set("n", "-", "<C-x>", { desc = "Decrement numbers", noremap = true })
 
 vim.keymap.set('v', '/', function()
     -- Get existing content from register 'v'
@@ -136,6 +147,14 @@ if vim.g.vscode then
     -- Mostly only need to remap leader keybindings, since the
     -- rest can be handled in VSCode's native keybindings
     -- editor (can't rebind leader key to be a layer key like CTRL or SHIFT)
+    vim.keymap.set("n", "<leader>n", function()
+        vscode.action("editor.action.marker.nextInFiles")
+    end)
+
+    vim.keymap.set("n", "<leader>p", function()
+        vscode.action("editor.action.marker.prevInFiles")
+    end)
+
     vim.keymap.set("n", "<leader>e", function()
         vscode.action("editor.action.showHover")
     end)
@@ -202,23 +221,37 @@ if vim.g.vscode then
 else
     -- ordinary Neovim
 
+    -- Set error and quickfix list navigation to <C-n>/<C-p>
+    -- and <leader>n/<leader>p respectively
+    vim.keymap.set("n", "<C-n>", "<cmd>cnext<CR>zz")
+    vim.keymap.set("n", "<C-p>", "<cmd>cprev<CR>zz")
+    vim.keymap.set("n", "<leader>n", "<cmd>lnext<CR>zz")
+    vim.keymap.set("n", "<leader>p", "<cmd>lprev<CR>zz")
+
+    -- Buffer navigation should also center viewport
+    -- to middle of new cursor location
     vim.keymap.set("n", "<C-d>", "<C-d>zz")
     vim.keymap.set("n", "<C-u>", "<C-u>zz")
     vim.keymap.set("n", "<C-f>", "<C-f>zz")
     vim.keymap.set("n", "<C-b>", "<C-b>zz")
 
+    -- Use C-<Arrow> keys for window navigation
     vim.keymap.set("n", "<C-Up>", "<C-w><Up>")
     vim.keymap.set("n", "<C-Down>", "<C-w><Down>")
     vim.keymap.set("n", "<C-Left>", "<C-w><Left>")
     vim.keymap.set("n", "<C-Right>", "<C-w><Right>")
 
+    -- Open the float window that gives more information
+    -- about the error on the line
     vim.keymap.set("n", "<leader>e", function()
         vim.diagnostic.open_float()
     end)
 
+    -- Format the current buffer using the LSP
     vim.keymap.set("n", "<leader>f", function()
         vim.lsp.buf.format()
     end)
 
+    -- Open Neovim's file explorer, NetRW
     vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 end
