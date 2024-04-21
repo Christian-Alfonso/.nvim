@@ -78,27 +78,57 @@ if vim.g.vscode then
     -- (possibly misuse of noremap, recursive calling the mapping).
     vim.keymap.set("n", "o", function()
         if vim.v.count1 == 1 then
-            return
-            "<Cmd>lua require('vscode-neovim').action('editor.action.insertLineAfter')<CR>i"
+            -- Add line after, in the way that "o" usually does
+            vscode.action('editor.action.insertLineAfter')
+            -- Deleting this new line and insert a line before fixes
+            -- the issue with both indenting and deleting that indent
+            -- upon hitting Escape
+            vscode.action('editor.action.deleteLines')
+            vscode.action('editor.action.insertLineBefore')
+            vscode.action('vscode-neovim.send', { args = { 'i' } })
         else
+            -- Let normal "o" command take care of numbered commands,
+            -- just don't do anything weird like backspacing or tabbing
+            -- to change the indent level, which can sometimes break it
             return "o"
         end
     end, { expr = true })
 
     vim.keymap.set("n", "O", function()
         if vim.v.count1 == 1 then
-            return
-            "<Cmd>lua require('vscode-neovim').action('editor.action.insertLineBefore')<CR>i"
+            -- Add line before, in the way that "O" usually does
+            vscode.action('editor.action.insertLineBefore')
+            -- Deleting this new line and insert a line before fixes
+            -- the issue with both indenting and deleting that indent
+            -- upon hitting Escape
+            vscode.action('editor.action.deleteLines')
+            vscode.action('editor.action.insertLineBefore')
+            vscode.action('vscode-neovim.send', { args = { 'i' } })
         else
+            -- Let normal "O" command take care of numbered commands,
+            -- just don't do anything weird like backspacing or tabbing
+            -- to change the indent level, which can sometimes break it
             return "O"
         end
     end, { expr = true })
 
     vim.keymap.set("n", "S", function()
         if vim.v.count1 == 1 then
-            return
-            "<Cmd>lua require('vscode-neovim').action('editor.action.deleteLines') require('vscode-neovim').action('editor.action.insertLineBefore')<CR>i"
+            -- Strangely, need to add line before and delete it,
+            -- just doing the commands that follow these does not fix
+            -- the deletion of the indent when hitting Escape
+            vscode.action('editor.action.insertLineBefore')
+            vscode.action('editor.action.deleteLines')
+            -- Deleting this new line and insert a line before fixes
+            -- the issue with both indenting and deleting that indent
+            -- upon hitting Escape
+            vscode.action('editor.action.deleteLines')
+            vscode.action('editor.action.insertLineBefore')
+            vscode.action('vscode-neovim.send', { args = { 'i' } })
         else
+            -- Let normal "S" command take care of numbered commands,
+            -- just don't do anything weird like backspacing or tabbing
+            -- to change the indent level, which can sometimes break it
             return "S"
         end
     end, { expr = true })
