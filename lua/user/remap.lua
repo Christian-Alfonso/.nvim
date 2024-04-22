@@ -96,7 +96,14 @@ if vim.g.vscode then
             -- upon hitting Escape
             vscode.action('editor.action.deleteLines')
             vscode.action('editor.action.insertLineBefore')
-            vscode.action('vscode-neovim.send', { args = { 'i' } })
+            -- Hack behavior for last line specifically because it appears
+            -- to prevent the previous insertLineAfter to occur after the
+            -- end of the buffer for some reason
+            if vim.fn.line('$') == vim.fn.line('.') then
+                vscode.action('editor.action.deleteLines')
+                vscode.action('editor.action.insertLineAfter')
+            end
+            return "i"
         else
             -- Let normal "o" command take care of numbered commands,
             -- just don't do anything weird like backspacing or tabbing
@@ -114,7 +121,7 @@ if vim.g.vscode then
             -- upon hitting Escape
             vscode.action('editor.action.deleteLines')
             vscode.action('editor.action.insertLineBefore')
-            vscode.action('vscode-neovim.send', { args = { 'i' } })
+            return "i"
         else
             -- Let normal "O" command take care of numbered commands,
             -- just don't do anything weird like backspacing or tabbing
@@ -128,14 +135,21 @@ if vim.g.vscode then
             -- Strangely, need to add line before and delete it,
             -- just doing the commands that follow these does not fix
             -- the deletion of the indent when hitting Escape
-            vscode.action('editor.action.insertLineBefore')
             vscode.action('editor.action.deleteLines')
+            vscode.action('editor.action.insertLineBefore')
             -- Deleting this new line and insert a line before fixes
             -- the issue with both indenting and deleting that indent
             -- upon hitting Escape
             vscode.action('editor.action.deleteLines')
             vscode.action('editor.action.insertLineBefore')
-            vscode.action('vscode-neovim.send', { args = { 'i' } })
+            -- Hack behavior for last line specifically because it appears
+            -- to prevent the previous insertLineBefore to occur after the
+            -- end of the buffer for some reason
+            if vim.fn.line('$') == vim.fn.line('.') then
+                vscode.action('editor.action.deleteLines')
+                vscode.action('editor.action.insertLineAfter')
+            end
+            return "i"
         else
             -- Let normal "S" command take care of numbered commands,
             -- just don't do anything weird like backspacing or tabbing
