@@ -77,32 +77,78 @@ if vim.g.vscode then
 
     local vscode = require('vscode-neovim')
 
+    -- Need to rebind the undo/redo functionality to VSCode's version.
+    -- Neovim's version can get out of sync easily during fast key sequences
+    -- like "o<Esc>u" with the new line commands that follow this one, because
+    -- they use VSCode's commands to fix other issues with the extension
+    vim.keymap.set("n", "u", function()
+        for i = vim.v.count1, 1, -1
+        do
+            vscode.call('undo')
+        end
+    end)
+
+    vim.keymap.set("n", "<C-r>", function()
+        for i = vim.v.count1, 1, -1
+        do
+            vscode.call('redo')
+        end
+    end)
+
     -- Allow VSCode to handle opening new line commands, because otherwise both Neovim
     -- and VSCode will try to add autoindents to the same buffer, leading to empty
     -- lines with trailing whitespace
     --
     -- Notes: This rebind cannot be done from VSCode because rebinding any normal character like
     -- 'o' results in not being able to type that character without accidentally triggering the
-    -- command (unless careful mode conditions are set, which is challenging to do for every mode
-    -- other than normal). Furthermore, the rebind cannot use a Lua function to make this more
-    -- readable, because vim.cmd.normal causes crashing and repeated character typing loops
-    -- (possibly misuse of noremap, recursive calling the mapping).
+    -- command (unless careful mode conditions are set, which is impossible to do for every mode
+    -- other than normal). Furthermore, the rebind cannot use vim.cmd.normal, as that appears to
+    -- cause crashing and repeated character typing loops as if recursively calling the keymap,
+    -- so the string returned at the end is necessary to actually enter insert mode afterwards
     vim.keymap.set("n", "o", function()
         if vim.v.count1 == 1 then
-            -- Add line after, in the way that "o" usually does
-            vscode.action('editor.action.insertLineAfter')
-            -- Deleting this new line and insert a line before fixes
-            -- the issue with both indenting and deleting that indent
-            -- upon hitting Escape
-            vscode.action('editor.action.deleteLines')
-            vscode.action('editor.action.insertLineBefore')
             -- Hack behavior for last line specifically because it appears
             -- to prevent the previous insertLineAfter to occur after the
             -- end of the buffer for some reason
             if vim.fn.line('$') == vim.fn.line('.') then
-                vscode.action('editor.action.deleteLines')
-                vscode.action('editor.action.insertLineAfter')
+                vscode.action(
+                    'runCommands',
+                    {
+                        args = {
+                            commands = {
+                                -- Add line after, in the way that "o" usually does
+                                'editor.action.insertLineAfter',
+                                -- Deleting this new line and insert a line before fixes
+                                -- the issue with both indenting and deleting that indent
+                                -- upon hitting Escape
+                                'editor.action.deleteLines',
+                                'editor.action.insertLineBefore',
+                                -- Need extra new line for end of file
+                                'editor.action.deleteLines',
+                                'editor.action.insertLineAfter'
+                            }
+                        },
+                    }
+                )
+            else
+                vscode.action(
+                    'runCommands',
+                    {
+                        args = {
+                            commands = {
+                                -- Add line after, in the way that "o" usually does
+                                'editor.action.insertLineAfter',
+                                -- Deleting this new line and insert a line before fixes
+                                -- the issue with both indenting and deleting that indent
+                                -- upon hitting Escape
+                                'editor.action.deleteLines',
+                                'editor.action.insertLineBefore',
+                            }
+                        },
+                    }
+                )
             end
+
             return "i"
         else
             -- Let normal "o" command take care of numbered commands,
@@ -114,13 +160,23 @@ if vim.g.vscode then
 
     vim.keymap.set("n", "O", function()
         if vim.v.count1 == 1 then
-            -- Add line before, in the way that "O" usually does
-            vscode.action('editor.action.insertLineBefore')
-            -- Deleting this new line and insert a line before fixes
-            -- the issue with both indenting and deleting that indent
-            -- upon hitting Escape
-            vscode.action('editor.action.deleteLines')
-            vscode.action('editor.action.insertLineBefore')
+            vscode.action(
+                'runCommands',
+                {
+                    args = {
+                        commands = {
+                            -- Add line before, in the way that "O" usually does
+                            'editor.action.insertLineBefore',
+                            -- Deleting this new line and insert a line before fixes
+                            -- the issue with both indenting and deleting that indent
+                            -- upon hitting Escape
+                            'editor.action.deleteLines',
+                            'editor.action.insertLineBefore'
+                        }
+                    },
+                }
+            )
+
             return "i"
         else
             -- Let normal "O" command take care of numbered commands,
@@ -132,23 +188,54 @@ if vim.g.vscode then
 
     vim.keymap.set("n", "S", function()
         if vim.v.count1 == 1 then
-            -- Strangely, need to add line before and delete it,
-            -- just doing the commands that follow these does not fix
-            -- the deletion of the indent when hitting Escape
-            vscode.action('editor.action.deleteLines')
-            vscode.action('editor.action.insertLineBefore')
-            -- Deleting this new line and insert a line before fixes
-            -- the issue with both indenting and deleting that indent
-            -- upon hitting Escape
-            vscode.action('editor.action.deleteLines')
-            vscode.action('editor.action.insertLineBefore')
             -- Hack behavior for last line specifically because it appears
             -- to prevent the previous insertLineBefore to occur after the
             -- end of the buffer for some reason
             if vim.fn.line('$') == vim.fn.line('.') then
-                vscode.action('editor.action.deleteLines')
-                vscode.action('editor.action.insertLineAfter')
+                vscode.action(
+                    'runCommands',
+                    {
+                        args = {
+                            commands = {
+                                -- Strangely, need to add line before and delete it,
+                                -- just doing the commands that follow these does not fix
+                                -- the deletion of the indent when hitting Escape
+                                'editor.action.deleteLines',
+                                'editor.action.insertLineBefore',
+                                -- Deleting this new line and insert a line before fixes
+                                -- the issue with both indenting and deleting that indent
+                                -- upon hitting Escape
+                                'editor.action.deleteLines',
+                                'editor.action.insertLineBefore',
+                                -- Need extra new line for end of file
+                                'editor.action.deleteLines',
+                                'editor.action.insertLineAfter',
+                            }
+                        },
+                    }
+                )
+            else
+                vscode.action(
+                    'runCommands',
+                    {
+                        args = {
+                            commands = {
+                                -- Strangely, need to add line before and delete it,
+                                -- just doing the commands that follow these does not fix
+                                -- the deletion of the indent when hitting Escape
+                                'editor.action.deleteLines',
+                                'editor.action.insertLineBefore',
+                                -- Deleting this new line and insert a line before fixes
+                                -- the issue with both indenting and deleting that indent
+                                -- upon hitting Escape
+                                'editor.action.deleteLines',
+                                'editor.action.insertLineBefore'
+                            }
+                        },
+                    }
+                )
             end
+
             return "i"
         else
             -- Let normal "S" command take care of numbered commands,
