@@ -5,11 +5,6 @@ vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 
 vim.keymap.set("n", "J", "mzJ`z")
 
--- Center viewport when using n/N to navigate
--- to next/previous thing with find mode
-vim.keymap.set("n", "n", "nzzzv")
-vim.keymap.set("n", "N", "Nzzzv")
-
 -- <leader>p can be used to paste lines from Neovim's paste
 -- buffer without also cutting the lines being pasted over
 -- (preserves whatever you just pasted)
@@ -50,25 +45,6 @@ vim.keymap.set("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>")
 -- those control key mappings can be used by Tmux instead
 vim.keymap.set("n", "+", "<C-a>", { desc = "Increment numbers", noremap = true })
 vim.keymap.set("n", "-", "<C-x>", { desc = "Decrement numbers", noremap = true })
-
-vim.keymap.set('v', '/', function()
-    -- Get existing content from register 'v'
-    local old_vreg = vim.fn.getreg('v')
-
-    -- Store visual selection in register 'v'
-    vim.cmd.normal('\"vy')
-
-    -- Get <C-r> as a special key to feed into "feedkeys"
-    local ctrl_r = vim.api.nvim_replace_termcodes("<C-r>", true, false, true)
-
-    -- Feed "/<C-r><C-r>v" to get the content of the 'v' register'
-    vim.api.nvim_feedkeys("/" .. ctrl_r .. ctrl_r .. "v", 'm', false)
-
-    -- Restore existing content back in register 'v'
-    -- (schedule to happen after "feedkeys" to avoid
-    -- clobbering of the input from register "v")
-    vim.schedule(function() vim.fn.setreg('v', old_vreg) end)
-end)
 
 -- The remaining keymaps are behavior specific to either
 -- the Neovim extension in VSCode or real Neovim
@@ -245,7 +221,64 @@ if vim.g.vscode then
         end
     end, { expr = true })
 
-    -- Mostly only need to remap leader keybindings, since the
+    -- Center viewport when using "n" or "N" to navigate to next/previous thing
+    -- with find mode. Need to use VSCode's version because it is not possible
+    -- to handle next match and viewport scrolling from Neovim since VSCode
+    -- controls the scrolling. Requires using VSCode's find instead of Neovim's
+    -- as a consequence.
+    vim.keymap.set("n", "n", function()
+        vscode.action(
+            'runCommands',
+            {
+                args = {
+                    commands = {
+                        'editor.action.nextMatchFindAction',
+                        'cancelSelection',
+                        {
+                            command = "vscode-neovim.send",
+                            args = "zz"
+                        }
+                    }
+                },
+            }
+        )
+    end)
+
+    vim.keymap.set("n", "N", function()
+        vscode.action(
+            'runCommands',
+            {
+                args = {
+                    commands = {
+                        'editor.action.previousMatchFindAction',
+                        'cursorWordLeft',
+                        'cancelSelection',
+                        {
+                            command = "vscode-neovim.send",
+                            args = "zz"
+                        }
+                    }
+                },
+            }
+        )
+    end)
+
+    -- Rebind search functionality with "/" and "?" to use VSCode's instead of Neovim's. There
+    -- is no option to use Neovim's search this way, unfortunately, as it requires rebinding "n"
+    -- and "N" for compatibility, as in the keybinds above
+    vim.keymap.set({ "n", "v" }, "/", function()
+        vscode.action("actions.find")
+    end)
+
+    vim.keymap.set("n", "?", function()
+        vscode.action("actions.find")
+    end)
+
+    vim.keymap.set("n", "\\", function()
+        vscode.action("editor.action.startFindReplaceAction")
+    end)
+
+    -- Otherwise, mostly only need to remap leader keybindings, since the
     -- rest can be handled in VSCode's native keybindings
     -- editor (can't rebind leader key to be a layer key like CTRL or SHIFT)
     vim.keymap.set("n", "<leader>n", function()
@@ -321,6 +354,30 @@ if vim.g.vscode then
     end);
 else
     -- ordinary Neovim
+
+    vim.keymap.set('v', '/', function()
+        -- Get existing content from register 'v'
+        local old_vreg = vim.fn.getreg('v')
+
+        -- Store visual selection in register 'v'
+        vim.cmd.normal('\"vy')
+
+        -- Get <C-r> as a special key to feed into "feedkeys"
+        local ctrl_r = vim.api.nvim_replace_termcodes("<C-r>", true, false, true)
+
+        -- Feed "/<C-r><C-r>v" to get the content of the 'v' register'
+        vim.api.nvim_feedkeys("/" .. ctrl_r .. ctrl_r .. "v", 'm', false)
+
+        -- Restore existing content back in register 'v'
+        -- (schedule to happen after "feedkeys" to avoid
+        -- clobbering of the input from register "v")
+        vim.schedule(function() vim.fn.setreg('v', old_vreg) end)
+    end)
+
+    -- Center viewport when using "n" or "N" to navigate
+    -- to next/previous thing with find mode
+    vim.keymap.set("n", "n", "nzzzv")
+    vim.keymap.set("n", "N", "Nzzzv")
 
     -- Set error and quickfix list navigation to <C-n>/<C-p>
     -- and <leader>n/<leader>p respectively
