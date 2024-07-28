@@ -53,23 +53,29 @@ if vim.g.vscode then
 
     local vscode = require('vscode-neovim')
 
+    -- DEPRECATED: Remove undo/redo workaround, buffer sync logic in the VSCode Neovim
+    -- extension seems to have improved. Leaving the implementation below in case there
+    -- is ever a regression or further change in to sync behavior, but the issue seems to not
+    -- reproduce anymore. Ignore the below comments for this commented out rebind.
+    --
     -- Need to rebind the undo/redo functionality to VSCode's version.
     -- Neovim's version can get out of sync easily during fast key sequences
     -- like "o<Esc>u" with the new line commands that follow this one, because
     -- they use VSCode's commands to fix other issues with the extension
-    vim.keymap.set("n", "u", function()
-        for i = vim.v.count1, 1, -1
-        do
-            vscode.call('undo')
-        end
-    end)
 
-    vim.keymap.set("n", "<C-r>", function()
-        for i = vim.v.count1, 1, -1
-        do
-            vscode.call('redo')
-        end
-    end)
+    -- vim.keymap.set("n", "u", function()
+    --     for i = vim.v.count1, 1, -1
+    --     do
+    --         vscode.call('undo')
+    --     end
+    -- end)
+
+    -- vim.keymap.set("n", "<C-r>", function()
+    --     for i = vim.v.count1, 1, -1
+    --     do
+    --         vscode.call('redo')
+    --     end
+    -- end)
 
     -- Allow VSCode to handle opening new line commands, because otherwise both Neovim
     -- and VSCode will try to add autoindents to the same buffer, leading to empty
