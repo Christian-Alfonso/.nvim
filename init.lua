@@ -24,8 +24,6 @@ if not vim.g.vscode then
             vim.cmd("set listchars=tab:↹->,trail:•,extends:>,precedes:<,nbsp:⍽,conceal:?")
             vim.cmd("set list")
             -- Set diff options for Neovim
-            -- Only fold text at 999999 lines (basically never)
-            vim.cmd("set diffopt=context:999999")
             -- Set to ignore whitespace changes
             vim.cmd("set diffopt+=iwhite")
             -- Set to enable alignment match lines up to 60
