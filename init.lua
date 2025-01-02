@@ -28,6 +28,11 @@ if not vim.g.vscode then
             vim.cmd("set diffopt+=iwhite")
             -- Set to enable alignment match lines up to 60
             vim.cmd("set diffopt+=linematch:60")
+            -- TEMPORARY: Disable write to ShaDa file because on Windows, there is
+            -- a bug where all of the "main.shada.tmp.*" files in nvim-data are filled
+            -- and the main.shada file cannot be written. See this bug report:
+            -- https://github.com/neovim/neovim/issues/8587
+            vim.cmd("set shada=\"NONE\"")
         end,
     })
 
