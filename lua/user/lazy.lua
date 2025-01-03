@@ -190,6 +190,27 @@ require("lazy").setup({
                     -- Configuration here, or leave empty to use defaults
                 })
             end
+        },
+        -- Textcase allows easy switching between different casing styles (Pascal to underscored,
+        -- hypenated to Camel, etc.) to prevent the need to manually edit the entire word.
+        {
+            "johmsalas/text-case.nvim",
+            dependencies = { "nvim-telescope/telescope.nvim" },
+            init = function()
+                require("user.plugin.text-case")
+            end,
+            cmd = {
+                -- NOTE: The Subs command name can be customized via the option "substitude_command_name"
+                "Subs",
+                "TextCaseOpenTelescope",
+                "TextCaseOpenTelescopeQuickChange",
+                "TextCaseOpenTelescopeLSPChange",
+                "TextCaseStartReplacingCommand",
+            },
+            -- If you want to use the interactive feature of the `Subs` command right away, text-case.nvim
+            -- has to be loaded on startup. Otherwise, the interactive feature of the `Subs` will only be
+            -- available after the first executing of it or after a keymap of text-case.nvim has been used.
+            lazy = false,
         }
     },
 })

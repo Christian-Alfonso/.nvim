@@ -40,9 +40,11 @@ telescope.setup {
     },
 }
 
--- For some reason, the "load_extension" call has to happen after
+-- For some reason, the "load_extension" calls have to happen after
 -- the "setup" call for telescope. See here for more information:
 -- https://github.com/nvim-telescope/telescope-live-grep-args.nvim/issues/71#issuecomment-1798119642
+
+-- Load extension for live grep args to enable file search
 telescope.load_extension('live_grep_args')
 
 local builtin = require('telescope.builtin')
@@ -81,3 +83,10 @@ local lga_shortcuts = require("telescope-live-grep-args.shortcuts")
 
 vim.keymap.set('n', '<leader>p*', lga_shortcuts.grep_word_under_cursor, {})
 vim.keymap.set('v', '<leader>plg', lga_shortcuts.grep_visual_selection, {})
+
+-- Load extension for textcase to enable interactive textcase option search
+telescope.load_extension('textcase')
+
+-- Search for textcase options for a given word or visual selection
+vim.keymap.set('n', 'gaT', '<cmd>TextCaseOpenTelescope<CR>', { desc = "Telescope for Textcase" })
+vim.keymap.set('v', 'gaT', "<cmd>TextCaseOpenTelescope<CR>", { desc = "Telescope for Textcase" })
