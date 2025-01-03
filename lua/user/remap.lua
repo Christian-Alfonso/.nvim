@@ -405,6 +405,12 @@ else
     vim.keymap.set("n", "<C-Left>", "<C-w><Left>")
     vim.keymap.set("n", "<C-Right>", "<C-w><Right>")
 
+    -- Use S-<Arrow> keys for window resizing
+    vim.keymap.set("n", "<S-Up>", "5<C-w>+")
+    vim.keymap.set("n", "<S-Down>", "5<C-w>-")
+    vim.keymap.set("n", "<S-Right>", "5<C-w>>")
+    vim.keymap.set("n", "<S-Left>", "5<C-w><")
+
     -- Open the float window that gives more information
     -- about the error on the line
     vim.keymap.set("n", "<leader>e", function()
