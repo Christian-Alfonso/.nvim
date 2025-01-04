@@ -303,11 +303,27 @@ if vim.g.vscode then
         vscode.action("editor.action.formatDocument")
     end)
 
+    vim.keymap.set("n", "<leader>c", function()
+        vscode.action("editor.action.quickFix")
+    end)
+
+    vim.keymap.set("n", "<leader>w", function()
+        vscode.action("workbench.action.showAllSymbols")
+    end)
+
+    vim.keymap.set("n", "<leader>r", function()
+        vscode.action("editor.action.referenceSearch.trigger")
+    end)
+
+    vim.keymap.set("n", "<leader>q", function()
+        vscode.action("editor.action.rename")
+    end)
+
     vim.keymap.set("n", "<leader>pv", function()
         vscode.action("workbench.view.explorer")
     end)
 
-    -- Replicate plugin functionality using VSCode equivalents
+    -- Replicate specific plugin functionality using VSCode equivalents
 
     ---------------
     -- Telescope --
@@ -420,6 +436,26 @@ else
     -- Format the current buffer using the LSP
     vim.keymap.set("n", "<leader>f", function()
         vim.lsp.buf.format()
+    end)
+
+    -- Get code actions for symbol under cursor
+    vim.keymap.set("n", "<leader>c", function()
+        vim.lsp.buf.code_action()
+    end)
+
+    -- Get all document symbols for current buffer
+    vim.keymap.set("n", "<leader>w", function()
+        vim.lsp.buf.document_symbol()
+    end)
+
+    -- Get all references to symbol under cursor
+    vim.keymap.set("n", "<leader>r", function()
+        vim.lsp.buf.references()
+    end)
+
+    -- Rename all references to symbol under cursor
+    vim.keymap.set("n", "<leader>q", function()
+        vim.lsp.buf.rename()
     end)
 
     -- Open Neovim's file explorer, NetRW
