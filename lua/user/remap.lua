@@ -332,6 +332,7 @@ if vim.g.vscode then
     vim.keymap.set('n', '<leader>pf', function()
         vscode.action("workbench.action.quickOpen")
     end)
+
     -- Search for keyword with "project search" (ps)
     vim.keymap.set('n', '<leader>ps', function()
         vscode.action("workbench.action.findInFiles")
@@ -340,16 +341,23 @@ if vim.g.vscode then
         --     args = { query = vim.fn.input("Grep > ") },
         -- })
     end)
+
+    vim.keymap.set('v', '<leader>ps', function()
+        vscode.action("workbench.action.findInFiles")
+    end)
+
     -- "Project resume" (pr) last search
     -- (VSCode only does search resume, so this is
     -- the same as "project search" or "ps")
     vim.keymap.set('n', '<leader>pr', function()
         vscode.action("workbench.action.findInFiles")
     end)
+
     -- Search through "project objects" (po)
     vim.keymap.set('n', '<leader>po', function()
         vscode.action("workbench.action.gotoSymbol")
     end)
+
     -- Search for keyword under cursor in project (p*)
     vim.keymap.set('n', '<leader>p*', function()
         local word = vim.fn.expand("<cword>")
@@ -361,6 +369,7 @@ if vim.g.vscode then
     --------------
     -- Fugitive --
     --------------
+    -- Open up Git source control interface
     vim.keymap.set("n", "<leader>gs", function()
         vscode.action("workbench.view.scm")
     end);
@@ -368,9 +377,14 @@ if vim.g.vscode then
     -------------
     -- Harpoon --
     -------------
+    -- Add file to quick menu navigation
+    -- (in VSCode, keeps the file open in the editor)
     vim.keymap.set("n", "<leader>ha", function()
         vscode.action("workbench.action.keepEditor")
     end);
+
+    -- Open quick menu navigation with current file list
+    -- (in VSCode, navigates to open editors list)
     vim.keymap.set("n", "<leader>he", function()
         vscode.action("workbench.files.action.focusOpenEditorsView")
     end);

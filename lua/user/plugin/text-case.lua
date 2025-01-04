@@ -50,7 +50,7 @@ vim.keymap.set('n', 'gop', function() textcase.operator('to_pascal_case') end, {
 vim.keymap.set('n', 'got', function() textcase.operator('to_title_case') end, {})
 vim.keymap.set('n', 'gof', function() textcase.operator('to_path_case') end, {})
 
--- Applies a textcase API function to a given visual selection. The general 
+-- Applies a textcase API function to a given visual selection. The general
 -- handling for all visual mode possibilities inspired by these posts:
 -- https://www.reddit.com/r/neovim/comments/1b1sv3a/function_to_get_visually_selected_text/
 -- https://www.reddit.com/r/neovim/comments/vu9atg/how_do_i_get_the_text_selected_in_visual_mode/

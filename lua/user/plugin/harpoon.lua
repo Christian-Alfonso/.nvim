@@ -4,7 +4,10 @@ local harpoon = require("harpoon")
 harpoon:setup()
 -- REQUIRED
 
+-- Add file to quick menu navigation
 vim.keymap.set("n", "<leader>ha", function() harpoon:list():add() end)
+
+-- Open quick menu navigation with current file list
 vim.keymap.set("n", "<leader>he", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end)
 
 -- Navigate Harpoon list using the same navigation keys
