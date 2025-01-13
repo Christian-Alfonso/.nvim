@@ -46,6 +46,9 @@ vim.keymap.set("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>")
 vim.keymap.set("n", "+", "<C-a>", { desc = "Increment numbers", noremap = true })
 vim.keymap.set("n", "-", "<C-x>", { desc = "Decrement numbers", noremap = true })
 
+-- <leader>b can be used to get a visual selection of the entire current buffer
+vim.keymap.set("n", "<leader>b", "ggVG")
+
 -- The remaining keymaps are behavior specific to either
 -- the Neovim extension in VSCode or real Neovim
 if vim.g.vscode then
