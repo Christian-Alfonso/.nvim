@@ -21,7 +21,7 @@ if not vim.g.vscode then
             -- Apply color theme for Neovim
             ColorMyPencils()
             -- Show certain whitespace characters
-            vim.cmd("set listchars=tab:↹->,trail:•,extends:>,precedes:<,nbsp:⍽,conceal:?")
+            vim.cmd("set listchars=tab:↹\\ ,trail:•,extends:>,precedes:<,nbsp:⍽,conceal:?")
             vim.cmd("set list")
             -- Set diff options for Neovim
             -- Set to ignore whitespace changes
@@ -72,6 +72,13 @@ if not vim.g.vscode then
         callback = function()
             ColorMyPencils()
             vim.cmd("set nofen")
+        end,
+    })
+
+    -- Autocommands upon entering new buffer
+    vim.api.nvim_create_autocmd("BufEnter", {
+        callback = function()
+            vim.cmd("set statusline=%<%f%h%m%r%=(%l,%c%V)\\ {%b,0x%B}\\ [%{&fileformat}]\\ %P")
         end,
     })
 
