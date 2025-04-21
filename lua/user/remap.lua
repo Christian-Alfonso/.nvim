@@ -49,6 +49,13 @@ vim.keymap.set("n", "-", "<C-x>", { desc = "Decrement numbers", noremap = true }
 -- <leader>b can be used to get a visual selection of the entire current buffer
 vim.keymap.set("n", "<leader>b", "ggVG")
 
+-- Buffer navigation should also center viewport
+-- to middle of new cursor location
+vim.keymap.set({ "n", "v" }, "<C-d>", "36jzz")
+vim.keymap.set({ "n", "v" }, "<C-u>", "36kzz")
+vim.keymap.set({ "n", "v" }, "<C-f>", "43jzz")
+vim.keymap.set({ "n", "v" }, "<C-b>", "43kzz")
+
 -- The remaining keymaps are behavior specific to either
 -- the Neovim extension in VSCode or real Neovim
 if vim.g.vscode then
@@ -79,6 +86,14 @@ if vim.g.vscode then
     --         vscode.call('redo')
     --     end
     -- end)
+
+    -- Center viewport using the built-in "revealLine" VSCode command from the exposed API:
+    -- https://github.com/vscode-neovim/vscode-neovim/issues/1909#issuecomment-2362783237
+    -- https://code.visualstudio.com/api/references/commands#commands
+    vim.keymap.set({ "n", "v" }, "zz", function()
+        local curline = vim.fn.line(".")
+        vscode.call("revealLine", { args = { lineNumber = curline, at = "center" } })
+    end)
 
     -- Allow VSCode to handle opening new line commands, because otherwise both Neovim
     -- and VSCode will try to add autoindents to the same buffer, leading to empty
@@ -424,13 +439,6 @@ else
     vim.keymap.set("n", "<C-p>", "<cmd>cprev<CR>zz")
     vim.keymap.set("n", "<leader>n", "<cmd>lnext<CR>zz")
     vim.keymap.set("n", "<leader>p", "<cmd>lprev<CR>zz")
-
-    -- Buffer navigation should also center viewport
-    -- to middle of new cursor location
-    vim.keymap.set("n", "<C-d>", "<C-d>zz")
-    vim.keymap.set("n", "<C-u>", "<C-u>zz")
-    vim.keymap.set("n", "<C-f>", "<C-f>zz")
-    vim.keymap.set("n", "<C-b>", "<C-b>zz")
 
     -- Use C-<Arrow> keys for window navigation
     vim.keymap.set("n", "<C-Up>", "<C-w><Up>")
