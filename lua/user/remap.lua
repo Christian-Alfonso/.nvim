@@ -433,6 +433,11 @@ else
     vim.keymap.set("n", "n", "nzzzv")
     vim.keymap.set("n", "N", "Nzzzv")
 
+    -- Center viewport when using <C-o>/<C-i> to navigate
+    -- to next/previous location in code
+    vim.keymap.set("n", "<C-o>", "<C-o>zz")
+    vim.keymap.set("n", "<C-i>", "<C-i>zz")
+
     -- Set error and quickfix list navigation to <C-n>/<C-p>
     -- and <leader>n/<leader>p respectively
     vim.keymap.set("n", "<C-n>", "<cmd>cnext<CR>zz")
