@@ -251,6 +251,8 @@ if vim.g.vscode then
     -- controls the scrolling. Requires using VSCode's find instead of Neovim's
     -- as a consequence.
     vim.keymap.set("n", "n", function()
+        vim.g.callback_ready = false
+
         vscode.action(
             'runCommands',
             {
@@ -258,17 +260,27 @@ if vim.g.vscode then
                     commands = {
                         'editor.action.nextMatchFindAction',
                         'cancelSelection',
-                        {
-                            command = "vscode-neovim.send",
-                            args = "zz"
-                        }
                     }
                 },
+                callback = function() vim.g.callback_ready = true end
             }
         )
+
+        if vim.wait(10000, function() return vim.g.callback_ready end) then
+            -- Calling for VSCode to evaluate the current line number
+            vscode.eval("return vscode.window.activeTextEditor.selection.active.line")
+
+            -- Grab the current line number now that the previous call has been evaluated,
+            -- as now it will be accurate (could also just add one to the value returned
+            -- by that previous VSCode eval call).
+            local curline = vim.fn.line(".")
+            vscode.call("revealLine", { args = { lineNumber = curline, at = "center" } })
+        end
     end)
 
     vim.keymap.set("n", "N", function()
+        vim.g.callback_ready = false
+
         vscode.action(
             'runCommands',
             {
@@ -277,14 +289,22 @@ if vim.g.vscode then
                         'editor.action.previousMatchFindAction',
                         'cursorWordLeft',
                         'cancelSelection',
-                        {
-                            command = "vscode-neovim.send",
-                            args = "zz"
-                        }
                     }
                 },
+                callback = function() vim.g.callback_ready = true end
             }
         )
+
+        if vim.wait(10000, function() return vim.g.callback_ready end) then
+            -- Calling for VSCode to evaluate the current line number
+            vscode.eval("return vscode.window.activeTextEditor.selection.active.line")
+
+            -- Grab the current line number now that the previous call has been evaluated,
+            -- as now it will be accurate (could also just add one to the value returned
+            -- by that previous VSCode eval call).
+            local curline = vim.fn.line(".")
+            vscode.call("revealLine", { args = { lineNumber = curline, at = "center" } })
+        end
     end)
 
     -- Rebind search functionality with "/" and "?" to use VSCode's instead of Neovim's. There
