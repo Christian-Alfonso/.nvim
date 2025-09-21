@@ -1,9 +1,16 @@
 vim.g.mapleader = " "
 
-vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
-vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
+-- Holding Shift while using j/k for up/down movement in
+-- visual mode will allow the block of code to be moved in
+-- that direction, even matches indent level of new scope
+--
+-- This functionality has been replaced using mini-move,
+-- since that respects counts and Normal/Visual differences
+-- vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
+-- vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 
-vim.keymap.set("n", "J", "mzJ`z")
+-- Joining lines will try to keep viewport in place
+vim.keymap.set("n", "_", "mzJ`z")
 
 -- <leader>p can be used to paste lines from Neovim's paste
 -- buffer without also cutting the lines being pasted over

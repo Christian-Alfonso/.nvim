@@ -191,6 +191,7 @@ require("lazy").setup({
                 })
             end
         },
+
         -- Textcase allows easy switching between different casing styles (Pascal to underscored,
         -- hypenated to Camel, etc.) to prevent the need to manually edit the entire word.
         {
@@ -211,6 +212,16 @@ require("lazy").setup({
             -- has to be loaded on startup. Otherwise, the interactive feature of the `Subs` will only be
             -- available after the first executing of it or after a keymap of text-case.nvim has been used.
             lazy = false,
-        }
+        },
+
+        -- Mini-move from the Mini-nvim collection of plugins allows for moving lines in a way that handles
+        -- the complexity of using counts and Normal/Visual mode differences in the line motions.
+        {
+            "nvim-mini/mini.move",
+            init = function()
+                require("user.plugin.mini-move")
+            end,
+            version = "*"
+        },
     },
 })
