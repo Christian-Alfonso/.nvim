@@ -1,6 +1,4 @@
--- Here is where you configure the autocompletion settings.
-local lsp_zero = require('lsp-zero')
-lsp_zero.extend_cmp()
+--TODO: Determine if this plugin config is even needed anymore after removal of LSP Zero
 
 local cmp = require('cmp')
 local cmp_mappings = cmp.mapping.preset.insert({

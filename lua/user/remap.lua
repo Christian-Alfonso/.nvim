@@ -490,6 +490,16 @@ else
         vim.diagnostic.open_float()
     end)
 
+    -- Go to symbol definition for the current buffer
+    vim.keymap.set("n", "gd", function()
+        vim.lsp.buf.definition()
+    end)
+
+    -- Go to symbol declaration for the current buffer
+    vim.keymap.set("n", "gD", function()
+        vim.lsp.buf.declaration()
+    end)
+
     -- Format the current buffer using the LSP
     vim.keymap.set("n", "<leader>f", function()
         vim.lsp.buf.format()

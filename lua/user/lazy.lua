@@ -104,24 +104,9 @@ require("lazy").setup({
             cond = not vim.g.vscode,
         },
 
-        -- LSP Zero uses all of the following includes for installing
-        -- and managing the Language Server Protocols (LSPs) that you
-        -- want to use for your text file of a certain language
-        -- ##############################################################
         {
-            'VonHeikemen/lsp-zero.nvim',
-            branch = 'v3.x',
-            lazy = true,
-            config = false,
-            init = function()
-                require("user.plugin.lsp-zero")
-            end,
-            cond = not vim.g.vscode,
-        },
-        {
-            'williamboman/mason.nvim',
-            lazy = false,
-            config = true,
+            "mason-org/mason.nvim",
+            opts = {},
             cond = not vim.g.vscode,
         },
 
@@ -152,7 +137,6 @@ require("lazy").setup({
             end,
             cond = not vim.g.vscode,
         },
-        -- ##############################################################
 
         -- Gitsigns shows "signs" next to the line numbers to indicate
         -- whether the file has been modified according to Git
