@@ -18,6 +18,12 @@ if not vim.g.vscode then
             -- vim.o.packpath = vim.o.runtimepath
             -- vim.cmd("source .vimrc")
 
+            -- Disable providers that we will not be using anyway
+            vim.cmd("let g:loaded_ruby_provider=0")
+            vim.cmd("let g:loaded_python3_provider=0")
+            vim.cmd("let g:loaded_perl_provider=0")
+            vim.cmd("let g:loaded_node_provider=0")
+
             -- Apply color theme for Neovim
             ColorMyPencils()
             -- Show certain whitespace characters
