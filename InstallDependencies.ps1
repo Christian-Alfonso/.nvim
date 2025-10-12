@@ -10,3 +10,7 @@ winget install --id sharkdp.fd --source winget
 # MSYS2 on Windows, but this is the quickest and
 # easiest install to deal with for Windows
 winget install --id LLVM.LLVM --source winget
+
+# LLVM does not seem to add itself to the PATH
+# variable, so it needs to be done manually
+[System.Environment]::SetEnvironmentVariable("Path", $Env:PATH + ";C:\Program Files\LLVM\bin", "User")
