@@ -45,8 +45,209 @@ vim.keymap.set("n", "Q", "<nop>")
 
 -- Original version, but "/gI" option doesn't seem to matter when using "%" to select
 -- the entire file, so not sure why it would be needed
+--
+-- Commented out because this functionality has proved not particularly useful in most
+-- situations where find and replace would be necessary
 -- vim.keymap.set("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>")
-vim.keymap.set("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>")
+-- vim.keymap.set("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>")
+
+-- Insert on the first non-whitespace character of each line
+vim.keymap.set("n", "<leader>i", function()
+
+end)
+
+-- Append to the end of each line, without padding each line
+vim.keymap.set("v", "<leader>a", function()
+    local vstart = vim.fn.getpos("v")
+    local vend = vim.fn.getpos(".")
+
+    local line_start
+    local line_end
+
+    if vstart[2] < vend[2] then
+        line_start = vstart[2]
+        line_end = vend[2]
+    else
+        line_start = vend[2]
+        line_end = vstart[2]
+    end
+
+    local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+    local ctrl_v = vim.api.nvim_replace_termcodes("<C-v>", true, false, true)
+
+    -- local col_nav
+
+    -- if first_whitespace_col > 1 then
+    --     col_nav = (first_whitespace_col - 1) .. 'l'
+    -- else
+    --     col_nav = ''
+    -- end
+
+    vim.api.nvim_feedkeys(
+        esc ..
+        line_start ..
+        -- 'G0' .. col_nav .. ctrl_v .. line_end .. 'GI',
+        'GA',
+        'm',
+        false)
+
+    local last_inserted_text = vim.fn.getreg('.')
+
+    local lines = vim.api.nvim_buf_get_lines(0, line_start, line_end, false)
+
+    for i, line in ipairs(lines) do
+        -- line_len = vim.fn.strlen(line)
+        -- if line_len < longest_line_len then
+        lines[i] = line .. last_inserted_text
+        -- end
+    end
+
+    vim.api.nvim_buf_set_lines(0, line_start, line_end, true, lines)
+end)
+
+local find_longest_line_index_and_length = function(start_line_num, end_line_num)
+    local lines = vim.api.nvim_buf_get_lines(0, start_line_num - 1, end_line_num, false)
+
+    local longest_line_num = start_line_num
+    local longest_line_len = 0
+
+    for i, line in ipairs(lines) do
+        local len = vim.fn.strlen(line)
+        if len > longest_line_len then
+            longest_line_num = start_line_num + i - 1
+            longest_line_len = len
+        end
+    end
+
+    return longest_line_num, longest_line_len
+end
+
+-- Insert (l)eading characters all in the same column, right before the
+-- first non-whitespace character on the line with the closest non-whitespace
+-- character to column 1 (left side of buffer), including empty lines
+vim.keymap.set("v", "<leader>l", function()
+    local vstart = vim.fn.getpos("v")
+    local vend = vim.fn.getpos(".")
+
+    local line_start
+    local line_end
+
+    if vstart[2] < vend[2] then
+        line_start = vstart[2]
+        line_end = vend[2]
+    else
+        line_start = vend[2]
+        line_end = vstart[2]
+    end
+
+    local _, longest_line_len = find_longest_line_index_and_length(line_start, line_end)
+
+    local lines = vim.api.nvim_buf_get_lines(0, line_start - 1, line_end, false)
+
+    first_whitespace_col = longest_line_len
+
+    for _, line in ipairs(lines) do
+        line_len = vim.fn.strlen(line)
+
+        -- Only consider non-empty lines
+        if line_len > 0 then
+            -- Find first non-whitespace character
+            local col = string.find(line, "%S")
+            if col < first_whitespace_col then
+                first_whitespace_col = col -- Lua uses 1-based indexing
+            end
+
+            -- There cannot be any column before 1
+            -- so if we found a column with a character
+            -- at 1, we can just break, no need to keep
+            -- looking at the rest of the lines
+            if col == 1 then
+                first_whitespace_col = 1
+                break
+            end
+        end
+    end
+
+    for i, line in ipairs(lines) do
+        line_len = vim.fn.strlen(line)
+
+        print(line_len)
+        if line_len == 0 then
+            lines[i] = string.rep(" ", first_whitespace_col - 1)
+        end
+    end
+
+    vim.api.nvim_buf_set_lines(0, line_start - 1, line_end, true, lines)
+
+    local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+    local ctrl_v = vim.api.nvim_replace_termcodes("<C-v>", true, false, true)
+
+    local col_nav
+
+    if first_whitespace_col > 1 then
+        col_nav = (first_whitespace_col - 1) .. 'l'
+    else
+        col_nav = ''
+    end
+
+    vim.api.nvim_feedkeys(
+        esc ..
+        line_start ..
+        'G0' .. col_nav .. ctrl_v .. line_end .. 'GI',
+        'm',
+        false)
+end)
+
+local pad_lines_to_longest_with_spaces = function(start_line_num, end_line_num)
+    local _, longest_line_len = find_longest_line_index_and_length(start_line_num, end_line_num)
+
+    local lines = vim.api.nvim_buf_get_lines(0, start_line_num - 1, end_line_num, false)
+
+    for i, line in ipairs(lines) do
+        line_len = vim.fn.strlen(line)
+        if line_len < longest_line_len then
+            lines[i] = line .. string.rep(" ", longest_line_len - line_len)
+        end
+    end
+
+    vim.api.nvim_buf_set_lines(0, start_line_num - 1, end_line_num, true, lines)
+end
+
+-- Append (t)railing characters all in the same column, right after the
+-- last character of the longest line, including empty lines
+vim.keymap.set("v", "<leader>t", function()
+    local vstart = vim.fn.getpos("v")
+    local vend = vim.fn.getpos(".")
+
+    local line_start
+    local line_end
+
+    if vstart[2] < vend[2] then
+        line_start = vstart[2]
+        line_end = vend[2]
+    else
+        line_start = vend[2]
+        line_end = vstart[2]
+    end
+
+    pad_lines_to_longest_with_spaces(line_start, line_end)
+
+    local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+    local ctrl_v = vim.api.nvim_replace_termcodes("<C-v>", true, false, true)
+
+    vim.api.nvim_feedkeys(esc .. line_start .. 'G$' .. ctrl_v .. line_end .. 'GA', 'm', false)
+end)
+
+
+vim.keymap.set("v", "<leader>w", function()
+    local curpos = vim.fn.getpos("v")
+    vim.cmd("'<,'>s/\\s\\+$//e")
+    vim.fn.setpos(".", curpos)
+
+    local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+
+    vim.api.nvim_feedkeys(esc .. '0', 'm', false)
+end)
 
 -- Rebind increment/decrement number to +/- keys, so that
 -- those control key mappings can be used by Tmux instead
@@ -340,6 +541,17 @@ if vim.g.vscode then
         vscode.action("editor.action.marker.prevInFiles")
     end)
 
+    vim.keymap.set("n", "<leader>w", function()
+        vscode.action("editor.action.trimTrailingWhitespace")
+    end)
+
+    vim.keymap.set("v", "<leader>w", function()
+        print("THIS")
+        -- local curpos = vim.fn.getpos("v")
+        vim.cmd("'<,'>s/\\s\\+$//e")
+        -- vim.fn.setpos(".", curpos)
+    end)
+
     vim.keymap.set("n", "<leader>e", function()
         vscode.action("editor.action.showHover")
     end)
@@ -352,7 +564,7 @@ if vim.g.vscode then
         vscode.action("editor.action.quickFix")
     end)
 
-    vim.keymap.set("n", "<leader>w", function()
+    vim.keymap.set("n", "<leader>s", function()
         vscode.action("workbench.action.showAllSymbols")
     end)
 
@@ -484,6 +696,27 @@ else
     vim.keymap.set("n", "<S-Right>", "5<C-w>>")
     vim.keymap.set("n", "<S-Left>", "5<C-w><")
 
+    -- Remove trailing whitespace in buffer
+    --
+    -- taken from:
+    -- https://vi.stackexchange.com/a/41388
+    vim.keymap.set("n", "<leader>w", function()
+        print("THAT")
+        local curpos = vim.fn.getpos(".")
+        vim.cmd("%s/\\s\\+$//eg")
+        vim.fn.setpos(".", curpos)
+    end)
+
+    vim.keymap.set("v", "<leader>w", function()
+        local curpos = vim.fn.getpos("v")
+        vim.cmd("'<,'>s/\\s\\+$//eg")
+        vim.fn.setpos(".", curpos)
+
+        local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+
+        vim.api.nvim_feedkeys(esc .. '0', 'm', false)
+    end)
+
     -- Open the float window that gives more information
     -- about the error on the line
     vim.keymap.set("n", "<leader>e", function()
@@ -511,7 +744,7 @@ else
     end)
 
     -- Get all document symbols for current buffer
-    vim.keymap.set("n", "<leader>w", function()
+    vim.keymap.set("n", "<leader>s", function()
         vim.lsp.buf.document_symbol()
     end)
 

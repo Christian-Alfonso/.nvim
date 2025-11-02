@@ -38,6 +38,11 @@ telescope.setup {
             -- layout_config = { mirror=true }, -- mirror preview pane
         },
     },
+    pickers = {
+        find_files = {
+            hidden = true,
+        },
+    },
 }
 
 -- For some reason, the "load_extension" calls have to happen after
