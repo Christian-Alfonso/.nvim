@@ -29,9 +29,6 @@ $LLVMPath = "C:\Program Files\LLVM\bin"
 # version of the installed program, and therefore must be found dynamically
 $RipGrepVersionPath = Get-ChildItem -Path $RipGrepPath -Directory | Select-Object -First 1
 $FdVersionPath = Get-ChildItem -Path $FdPath -Directory | Select-Object -First 1
- 
-Write-Host $RipGrepVersionPath
-Write-Host $FdVersionPath
 
 # All of these packages do not seem to do a great job of adding
 # themselves to the PATH variable after installation, so it needs
@@ -41,17 +38,46 @@ Write-Host $FdVersionPath
 # very well with the PATH variable for some reason, so we use this
 # registry hack to add them instead. Taken from this comment:
 # https://www.reddit.com/r/PowerShell/comments/1c4ds4x/comment/kzn7au6/
+#
+# Check whether the PATH variables have been written before, and skip
+# writing them if they are already on the PATH
+
+$PATHValuesToAdd = @(
+    ";$LLVMPath"
+    ";$RipGrepVersionPath"
+    ";$FdVersionPath"
+)
+
+# Get the existing PATH contents to see if the variables are already in there
 $Key = Get-Item "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
-$ExistingPath = $Key.GetValue("PATH", "", "DoNotExpandEnvironmentNames")
-$NewPath = $ExistingPath
+$ExistingPATH = $Key.GetValue("PATH", "", "DoNotExpandEnvironmentNames")
 
-$NewPath += ";$LLVMPath"
-$NewPath += ";$RipGrepVersionPath"
-$NewPath += ";$FdVersionPath"
+$NewPath = $ExistingPATH
+$PATHChanged = $false
 
-New-ItemProperty                                                               `
-    -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" `
-    -Name PATH                                                                 `
-    -Value $NewPath                                                            `
-    -PropertyType ExpandString                                                 `
-    -Force
+foreach ($Value in $PATHValuesToAdd) {
+    if (-not $ExistingPATH.Contains($Value)) {
+        $NewPath += $Value
+        $PATHChanged = $true
+    }
+    else {
+        Write-Warning "Skipping adding to PATH: $($Value.TrimStart(";"))"
+    }
+}
+
+if ($PATHChanged) {
+    if ($NewPath -eq $ExistingPATH) {
+        throw "PATH should have changed, but new and existing PATH strings are the same"
+    }
+
+    # Write the new PATH to the registry
+    New-ItemProperty                                                               `
+        -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" `
+        -Name PATH                                                                 `
+        -Value $NewPath                                                            `
+        -PropertyType ExpandString                                                 `
+        -Force
+}
+else {
+    Write-Warning "All variables already in PATH; skip writing"
+}
