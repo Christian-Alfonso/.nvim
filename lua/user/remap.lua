@@ -53,7 +53,6 @@ vim.keymap.set("n", "Q", "<nop>")
 
 -- Insert on the first non-whitespace character of each line
 vim.keymap.set("n", "<leader>i", function()
-
 end)
 
 -- Append to the end of each line, without padding each line
@@ -122,6 +121,26 @@ local find_longest_line_index_and_length = function(start_line_num, end_line_num
     return longest_line_num, longest_line_len
 end
 
+local find_first_nonwhitespace_column_in_line = function(line)
+    local line_len = vim.fn.strlen(line)
+
+    -- Only consider non-empty lines
+    if line_len > 0 then
+        -- Find first non-whitespace character
+        local col = string.find(line, "%S")
+
+        -- Only consider lines that have a
+        -- non-whitespace character
+        if col ~= nil then
+            return col
+        end
+    end
+
+    -- If the line was empty or had no non-whitespace
+    -- characters, return nil to indicate nothing found
+    return nil
+end
+
 -- Insert (l)eading characters all in the same column, right before the
 -- first non-whitespace character on the line with the closest non-whitespace
 -- character to column 1 (left side of buffer), including empty lines
@@ -144,36 +163,34 @@ vim.keymap.set("v", "<leader>l", function()
 
     local lines = vim.api.nvim_buf_get_lines(0, line_start - 1, line_end, false)
 
-    first_whitespace_col = longest_line_len
+    local first_nonwhitespace_col_in_lines = longest_line_len
+    local at_least_one_nonwhitespace_line = false
 
     for _, line in ipairs(lines) do
-        line_len = vim.fn.strlen(line)
+        local first_nonwhitespace_col = find_first_nonwhitespace_column_in_line(line)
 
-        -- Only consider non-empty lines
-        if line_len > 0 then
-            -- Find first non-whitespace character
-            local col = string.find(line, "%S")
-            if col < first_whitespace_col then
-                first_whitespace_col = col -- Lua uses 1-based indexing
-            end
+        if first_nonwhitespace_col ~= nil then
+            at_least_one_nonwhitespace_line = true
 
-            -- There cannot be any column before 1
-            -- so if we found a column with a character
-            -- at 1, we can just break, no need to keep
-            -- looking at the rest of the lines
-            if col == 1 then
-                first_whitespace_col = 1
-                break
+            if first_nonwhitespace_col < first_nonwhitespace_col_in_lines then
+                first_nonwhitespace_col_in_lines = first_nonwhitespace_col
             end
         end
     end
 
-    for i, line in ipairs(lines) do
-        line_len = vim.fn.strlen(line)
+    if at_least_one_nonwhitespace_line == false then
+        first_nonwhitespace_col_in_lines = 1
+    end
 
-        print(line_len)
-        if line_len == 0 then
-            lines[i] = string.rep(" ", first_whitespace_col - 1)
+    -- Pad lines that are empty or only contain whitespace up to the
+    -- first non-whitespace column that was found in the selection
+    for i, line in ipairs(lines) do
+        local col = string.find(line, "%S")
+
+        if col == nil then
+            local line_len = vim.fn.strlen(line)
+
+            lines[i] = line .. string.rep(" ", first_nonwhitespace_col_in_lines - line_len - 1)
         end
     end
 
@@ -182,18 +199,27 @@ vim.keymap.set("v", "<leader>l", function()
     local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
     local ctrl_v = vim.api.nvim_replace_termcodes("<C-v>", true, false, true)
 
-    local col_nav
+    -- Cannot use '^' to get to beginning of line, since the first line
+    -- in the selection may not be the line that has the first non-whitespace
+    -- character column, so we need to index from the first column manually
+    local col_nav = ((first_nonwhitespace_col_in_lines > 1) and at_least_one_nonwhitespace_line)
+        and ((first_nonwhitespace_col_in_lines - 1) .. 'l')
+        or ''
 
-    if first_whitespace_col > 1 then
-        col_nav = (first_whitespace_col - 1) .. 'l'
-    else
-        col_nav = ''
-    end
+    -- Need to recollect first line length after potential padding
+    local first_line_length = vim.fn.strlen(lines[1])
+
+    -- Adjust edit mode (insert or append) depending on whether the
+    -- line is empty/whitespace, since the cursor can
+    -- go past the end of the line
+    local edit_mode = ((first_nonwhitespace_col_in_lines > first_line_length) and (first_line_length > 0))
+        and 'A'
+        or 'I'
 
     vim.api.nvim_feedkeys(
         esc ..
         line_start ..
-        'G0' .. col_nav .. ctrl_v .. line_end .. 'GI',
+        'G0' .. col_nav .. ctrl_v .. line_end .. 'G' .. edit_mode,
         'm',
         false)
 end)
@@ -204,7 +230,7 @@ local pad_lines_to_longest_with_spaces = function(start_line_num, end_line_num)
     local lines = vim.api.nvim_buf_get_lines(0, start_line_num - 1, end_line_num, false)
 
     for i, line in ipairs(lines) do
-        line_len = vim.fn.strlen(line)
+        local line_len = vim.fn.strlen(line)
         if line_len < longest_line_len then
             lines[i] = line .. string.rep(" ", longest_line_len - line_len)
         end
