@@ -472,17 +472,27 @@ else
     vim.keymap.set("n", "<leader>n", "<cmd>lnext<CR>zz")
     vim.keymap.set("n", "<leader>p", "<cmd>lprev<CR>zz")
 
-    -- Use C-<Arrow> keys for window navigation
-    vim.keymap.set("n", "<C-Up>", "<C-w><Up>")
-    vim.keymap.set("n", "<C-Down>", "<C-w><Down>")
-    vim.keymap.set("n", "<C-Left>", "<C-w><Left>")
-    vim.keymap.set("n", "<C-Right>", "<C-w><Right>")
+    -- Use M-<Arrow> keys for window navigation, the other
+    -- common option for this is normally C-<Arrow> keys
+    --
+    -- However, the disadvantage to using C-<Arrow> keys is
+    -- that they conflict with usual word navigation in
+    -- terminal and every other common textbox. On the other
+    -- hand, M-<Arrow> keys do not seem to conflict with any
+    -- existing terminal keybindings, and do not seem to do
+    -- anything at all in common textboxes, making it ideal
+    -- for window/pane navigation in Neovim (and VSCode)
+    vim.keymap.set("n", "<M-Up>", "<C-w><Up>")
+    vim.keymap.set("n", "<M-Down>", "<C-w><Down>")
+    vim.keymap.set("n", "<M-Left>", "<C-w><Left>")
+    vim.keymap.set("n", "<M-Right>", "<C-w><Right>")
 
-    -- Use S-<Arrow> keys for window resizing
-    vim.keymap.set("n", "<S-Up>", "5<C-w>+")
-    vim.keymap.set("n", "<S-Down>", "5<C-w>-")
-    vim.keymap.set("n", "<S-Right>", "5<C-w>>")
-    vim.keymap.set("n", "<S-Left>", "5<C-w><")
+    -- Use C-M-<Arrow> keys for window resizing, M-S-<Arrow>
+    -- keys do not seem to be generally recognized in terminals
+    vim.keymap.set("n", "<C-M-Up>", "5<C-w>+")
+    vim.keymap.set("n", "<C-M-Down>", "5<C-w>-")
+    vim.keymap.set("n", "<C-M-Right>", "5<C-w>>")
+    vim.keymap.set("n", "<C-M-Left>", "5<C-w><")
 
     -- Open the float window that gives more information
     -- about the error on the line
