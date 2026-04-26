@@ -4,7 +4,18 @@ require("user.lazy")
 
 -- Load useful autocommands and theme when using
 -- real Neovim and not the VSCode extension
-if not vim.g.vscode then
+if vim.g.vscode then
+    -- In the VSCode extension, the Output panel
+    -- will pop up for messages of a couple lines
+    -- or more. Making this option very high means
+    -- that the "vscode-neovim messages" output will
+    -- not pop up the Output panel unless you are
+    -- explicitly selecting that output. This does
+    -- hide any unexpected messages, but avoids the
+    -- annoyance of constant message output for basic
+    -- actions and motions like undoing multiple lines
+    vim.o.cmdheight = 999
+else
     require("user.theme")
 
     -- Autocommands upon entering Neovim
