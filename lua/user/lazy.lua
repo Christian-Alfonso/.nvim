@@ -145,16 +145,6 @@ require("lazy").setup({
         -- VSCode compatible plugins --
         -------------------------------
 
-        -- Comment allows easy commenting/uncommenting of lines of code
-        -- based on what language is detected for your text file
-        {
-            'numToStr/Comment.nvim',
-            lazy = false,
-            init = function()
-                require("user.plugin.comment")
-            end
-        },
-
         -- Surround allows easy surrounding of text with common paired characters like
         -- ", ', (, [, {, etc. Since it is text only, it is compatible with VSCode.
         {
