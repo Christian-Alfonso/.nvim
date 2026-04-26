@@ -1,0 +1,55 @@
+# neovim.dsc.yaml
+#
+# Installs Neovim and the tools it depends on:
+#   - Ripgrep: used by Telescope and other search plugins
+#   - fd: used by Telescope for fast file-finding
+#   - LLVM/Clang: provides the C compiler that Tree-sitter needs to compile parsers
+#
+# Note: After this file is applied, setup-windows.ps1 still calls
+# .nvim/InstallDependencies.ps1 to add ripgrep, fd, and LLVM to the
+# system PATH via the registry. WinGet does not always add them
+# automatically, and that script handles that step.
+#
+# See:
+#   https://learn.microsoft.com/en-us/windows/package-manager/configuration/
+
+properties:
+    configurationVersion: 0.2.0
+    resources:
+        - resource: Microsoft.WinGet.DSC/WinGetPackage
+          id: InstallNeovim
+          directives:
+              description: Install Neovim
+              allowPrerelease: false
+          settings:
+              id: Neovim.Neovim
+              source: winget
+
+        - resource: Microsoft.WinGet.DSC/WinGetPackage
+          id: InstallWindowsSDK
+          directives:
+              description: Install Windows SDK 28000
+              allowPrerelease: false
+          settings:
+              id: Microsoft.WindowsSDK.10.0.28000
+              source: winget
+
+        # Install Ripgrep and FD, which are both used by
+        # Telescope and possibly other plugins
+        - resource: Microsoft.WinGet.DSC/WinGetPackage
+          id: InstallRipgrep
+          directives:
+              description: Install Ripgrep (used by Telescope and other Neovim plugins)
+              allowPrerelease: false
+          settings:
+              id: BurntSushi.ripgrep.MSVC
+              source: winget
+
+        - resource: Microsoft.WinGet.DSC/WinGetPackage
+          id: InstallFd
+          directives:
+              description: Install fd (fast file-finder, used by Telescope)
+              allowPrerelease: false
+          settings:
+              id: sharkdp.fd
+              source: winget

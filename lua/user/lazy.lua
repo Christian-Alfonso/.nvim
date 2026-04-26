@@ -59,16 +59,9 @@ require("lazy").setup({
         -- on associated language of text file
         {
             'nvim-treesitter/nvim-treesitter',
-            init = function()
-                require("user.plugin.treesitter")
-            end,
-            -- The following function updates Treesitter automatically,
-            -- which can be annoying since Lazy is being called on every
-            -- startup of Neovim. Run ":TSUpdate" manually for updates.
-            -- config = function()
-            --     local ts_update = require('nvim-treesitter.install').update({ with_sync = true })
-            --     ts_update()
-            -- end,
+            dependencies = { 'neovim-treesitter/treesitter-parser-registry' },
+            lazy = false,
+            build = ':TSUpdate',
             cond = not vim.g.vscode,
         },
 
