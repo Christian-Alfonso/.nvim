@@ -7,25 +7,23 @@
 
 #Requires -RunAsAdministrator
 
+# Idempotent Visual Studio Build Tools 2022 installer/updater
+# Installs or updates MSVC v143 toolset + Windows 11 SDK (22000)
 function InstallVisualStudioBuildTools() {
-    # Idempotent Visual Studio Build Tools 2022 installer/updater
-    # Installs or updates MSVC v143 toolset + Windows 11 SDK (22000)
-
-    $buildToolsPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
+    $BuildToolsPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
 
     Write-Host "Checking for existing Visual Studio Build Tools installation..."
 
-    # 1. Download bootstrapper if needed
-    $installer = "$env:TEMP\vs_buildtools.exe"
-    if (-not (Test-Path $installer)) {
-        Write-Host "Downloading Visual Studio Build Tools bootstrapper..."
-        Invoke-WebRequest `
-            -Uri "https://aka.ms/vs/17/release/vs_BuildTools.exe" `
-            -OutFile $installer
-    }
+    $VSBuildToolsInstaller = "$TempFolder\vs_buildtools.exe"
 
-    # 2. Required components for Rust + Tree-sitter
-    $arguments = @(
+    # Always download the latest VS Build Tools installer in case it is stale
+    Write-Host "Downloading Visual Studio Build Tools bootstrapper..."
+    Invoke-WebRequest `
+        -Uri "https://aka.ms/vs/17/release/vs_BuildTools.exe" `
+        -OutFile $VSBuildToolsInstaller
+
+    # Add required components for Rust + Tree-sitter
+    $Arguments = @(
         "--quiet",
         "--wait",
         "--norestart",
@@ -39,18 +37,50 @@ function InstallVisualStudioBuildTools() {
         "--add", "Microsoft.VisualStudio.Component.VC.CoreIde"
     )
 
-    # 3. Install or update
-    if (Test-Path $buildToolsPath) {
+    if (Test-Path $BuildToolsPath) {
         Write-Host "Existing Build Tools installation found. Updating components..."
     }
     else {
         Write-Host "No Build Tools installation found. Installing fresh..."
     }
 
-    Start-Process -FilePath $installer -ArgumentList $arguments -Wait -NoNewWindow
+    # Install or update VS Build Tools
+    Start-Process -FilePath $VSBuildToolsInstaller -ArgumentList $Arguments -Wait -NoNewWindow
 
     Write-Host "Visual Studio Build Tools installation/update complete."
 }
+
+# Idempotent Rust installer/updater
+# Installs or updates Rustup + Cargo
+function InstallRust() {
+    # Install or update Rust via rustup
+    if (Get-Command "rustup" -ErrorAction SilentlyContinue) {
+        Write-Host "rustup found. Updating Rust toolchain..."
+        & rustup update
+    }
+    else {
+        Write-Host "rustup not found. Downloading and installing Rust..."
+        $RustupInstaller = "$TempFolder\rustup-init.exe"
+        Invoke-WebRequest -Uri "https://win.rustup.rs/x86_64" -OutFile $RustupInstaller
+        & $RustupInstaller -y
+        # rustup modifies the user PATH but the change won't be reflected in the
+        # current session, so add cargo's bin directory manually for the steps below
+        $Env:PATH = "$Env:USERPROFILE\.cargo\bin;$Env:PATH"
+    }
+
+    # Install Tree-sitter CLI
+    if (Get-Command "cargo" -ErrorAction SilentlyContinue) {
+        # Build from source, requires MSVC compiler installed
+        # from Visual Studio Build Tools in Neovim DSC file
+        & cargo install --locked tree-sitter-cli
+    }
+    else {
+        throw "cargo not found after Rust installation. Please restart your terminal and re-run the script."
+    }
+}
+
+# Create a temp folder for downloading the installer, if it does not exist
+$TempFolder = New-Item -ItemType Directory -Force -Path "$PSScriptRoot\temp"
 
 # Enable WinGet DSC before any winget configure calls below. This is required
 # for winget configure to work and only needs to run once (subsequent runs are
@@ -132,12 +162,10 @@ else {
 # Reload PATH
 $Env:PATH = "$NewPATH;$ExistingPATH;$Env:PATH"
 
-# Install Tree-sitter CLI
-if (Get-Command "cargo" -ErrorAction SilentlyContinue) {
-    # Build from source, requires MSVC compiler installed
-    # from Visual Studio Build Tools in Neovim DSC file
-    & cargo install --locked tree-sitter-cli
-}
-else {
-    Write-Host "Executable not found in PATH."
-}
+InstallRust
+
+# Clean up by removing all temporary files now that they are no longer needed
+# (always download new ones on next script execution so these are not stale)
+Remove-Item -Recurse -Force $TempFolder
+
+Write-Host "Neovim configuration complete!"
