@@ -99,12 +99,12 @@ $PATHValuesToAdd = @(
 $Key = Get-Item "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
 $ExistingPATH = $Key.GetValue("PATH", "", "DoNotExpandEnvironmentNames")
 
-$NewPath = $ExistingPATH
+$NewPATH = $ExistingPATH
 $PATHChanged = $false
 
 foreach ($Value in $PATHValuesToAdd) {
     if (-not $ExistingPATH.Contains($Value)) {
-        $NewPath += $Value
+        $NewPATH += $Value
         $PATHChanged = $true
     }
     else {
@@ -113,7 +113,7 @@ foreach ($Value in $PATHValuesToAdd) {
 }
 
 if ($PATHChanged) {
-    if ($NewPath -eq $ExistingPATH) {
+    if ($NewPATH -eq $ExistingPATH) {
         throw "PATH should have changed, but new and existing PATH strings are the same"
     }
 
@@ -121,7 +121,7 @@ if ($PATHChanged) {
     New-ItemProperty                                                               `
         -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" `
         -Name PATH                                                                 `
-        -Value $NewPath                                                            `
+        -Value $NewPATH                                                            `
         -PropertyType ExpandString                                                 `
         -Force
 }
@@ -130,7 +130,7 @@ else {
 }
 
 # Reload PATH
-$Env:PATH = "$NewPath;$ExistingPATH;$Env:PATH"
+$Env:PATH = "$NewPATH;$ExistingPATH;$Env:PATH"
 
 # Install Tree-sitter CLI
 if (Get-Command "cargo" -ErrorAction SilentlyContinue) {
