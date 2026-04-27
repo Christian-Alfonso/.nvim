@@ -27,3 +27,6 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # Once Rust is installed, Treesitter CLI can be compiled
 # from source since we also have a compiler from build-essential
 cargo install --locked tree-sitter-cli
+
+# TODO: Add CMake installation to allow Telescope to work properly
+# https://linuxcapable.com/how-to-install-cmake-on-ubuntu-linux/

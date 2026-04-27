@@ -53,3 +53,12 @@ properties:
           settings:
               id: sharkdp.fd
               source: winget
+
+        - resource: Microsoft.WinGet.DSC/WinGetPackage
+          id: InstallCMake
+          directives:
+              description: Install CMake (common build system, used by Telescope)
+              allowPrerelease: false
+          settings:
+              id: Kitware.CMake
+              source: winget
