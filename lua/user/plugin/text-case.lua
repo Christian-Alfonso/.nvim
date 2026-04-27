@@ -140,6 +140,11 @@ local apply_textcase_function_to_visual_selection = function(textcase_function)
                 math.max(col_end - 1, col_end), { textcase_function(line) })
         end
     end
+
+    -- Use <Esc> to exit visual selection after operation is completed
+    local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+
+    vim.api.nvim_feedkeys(esc, 'm', false)
 end
 
 -- Mappings for change case operations on a given visual selection
