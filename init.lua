@@ -96,6 +96,10 @@ else
     vim.api.nvim_create_autocmd("BufEnter", {
         callback = function()
             vim.cmd("set statusline=%<%f%h%m%r%=(%l,%c%V)\\ {%b,0x%B}\\ [%{&fileformat}]\\ %P")
+
+            -- Disable autocomment prefix when opening new lines under comments
+            vim.cmd("set formatoptions-=cro")
+            vim.cmd("setlocal formatoptions-=cro")
         end,
     })
 
