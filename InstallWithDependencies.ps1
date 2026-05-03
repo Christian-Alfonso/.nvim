@@ -47,6 +47,10 @@ function InstallVisualStudioBuildTools() {
     # Install or update VS Build Tools
     Start-Process -FilePath $VSBuildToolsInstaller -ArgumentList $Arguments -Wait -NoNewWindow
 
+    if ($LASTEXITCODE -ne 0) {
+        throw "VS Build Tools failed to install: $LASTEXITCODE"
+    }
+
     Write-Host "Visual Studio Build Tools installation/update complete."
 }
 
@@ -68,15 +72,11 @@ function InstallRust() {
         $Env:PATH = "$Env:USERPROFILE\.cargo\bin;$Env:PATH"
     }
 
-    # Install Tree-sitter CLI
-    if (Get-Command "cargo" -ErrorAction SilentlyContinue) {
-        # Build from source, requires MSVC compiler installed
-        # from Visual Studio Build Tools in Neovim DSC file
-        & cargo install --locked tree-sitter-cli
+    if ($LASTEXITCODE -ne 0) {
+        throw "Rust failed to install: $LASTEXITCODE"
     }
-    else {
-        throw "cargo not found after Rust installation. Please restart your terminal and re-run the script."
-    }
+
+    Write-Host "Rust installation/update complete."
 }
 
 # Create a temp folder for downloading the installer, if it does not exist
@@ -162,6 +162,20 @@ else {
 $Env:PATH = "$NewPATH;$ExistingPATH;$Env:PATH"
 
 InstallRust
+
+# Install Tree-sitter CLI
+if (Get-Command "cargo" -ErrorAction SilentlyContinue) {
+    # Build from source, requires MSVC compiler installed
+    # from Visual Studio Build Tools in Neovim DSC file
+    & cargo install --locked tree-sitter-cli
+}
+else {
+    throw "cargo not found after Rust installation. Please restart your terminal and re-run the script."
+}
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Cargo failed to install tree-sitter-cli: $LASTEXITCODE"
+}
 
 # Clean up by removing all temporary files now that they are no longer needed
 # (always download new ones on next script execution so these are not stale)
