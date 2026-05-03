@@ -55,6 +55,15 @@ properties:
               source: winget
 
         - resource: Microsoft.WinGet.DSC/WinGetPackage
+          id: InstallLLVM
+          directives:
+              description: Install LLVM (common build system, used for Treesitter CLI compilation)
+              allowPrerelease: false
+          settings:
+              id: LLVM.LLVM
+              source: winget
+
+        - resource: Microsoft.WinGet.DSC/WinGetPackage
           id: InstallCMake
           directives:
               description: Install CMake (common build system, used by Telescope)
