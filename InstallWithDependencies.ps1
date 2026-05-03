@@ -87,7 +87,7 @@ $TempFolder = New-Item -ItemType Directory -Force -Path "$PSScriptRoot\temp"
 # a no-op).
 winget configure --enable
 
-# Install Neovim and its dependencies (ripgrep, fd, LLVM) via DSC.
+# Install Neovim and its dependencies (Windows SDK, ripgrep, fd, CMake) via DSC.
 # .nvim/InstallDependencies.ps1 is still called below to add those tools to
 # the system PATH, since WinGet does not always do this automatically.
 $NeovimConfig = "$PSScriptRoot\neovim.dsc.yaml"
@@ -97,8 +97,7 @@ InstallVisualStudioBuildTools
 
 # Base paths to look for the installed programs
 $RipGrepPath = "$Env:LOCALAPPDATA\Microsoft\WinGet\Packages\BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe"
-$FdPath = "$Env:LOCALAPPDATA\Microsoft\WinGet\Packages\sharkdp.fd_Microsoft.Winget.Source_8wekyb3d8bbwe\fd-v10.3.0-x86_64-pc-windows-msvc"
-# $LLVMPath = "C:\Program Files\LLVM\bin"
+$FdPath = "$Env:LOCALAPPDATA\Microsoft\WinGet\Packages\sharkdp.fd_Microsoft.Winget.Source_8wekyb3d8bbwe"
 $VSBuildToolsPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC"
 
 # Take the first subdirectory of these base paths, which will contain the
