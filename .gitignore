@@ -1,1 +1,5 @@
-*.json
+# Do not check in personal Lazy.nvim lockfile
+lazy-lock.json
+
+# Ignore any binaries downloaded by the setup scripts
+.temp/*
