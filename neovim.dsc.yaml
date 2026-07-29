@@ -10,6 +10,11 @@
 # system PATH via the registry. WinGet does not always add them
 # automatically, and that script handles that step.
 #
+# Note: Each package sets "useLatest: true" so that "winget configure"
+# upgrades already-installed packages to their latest version instead of
+# treating "already installed" as satisfying the desired state and skipping
+# the upgrade.
+#
 # See:
 #   https://learn.microsoft.com/en-us/windows/package-manager/configuration/
 
@@ -24,6 +29,7 @@ properties:
           settings:
               id: Neovim.Neovim
               source: winget
+              useLatest: true
 
         - resource: Microsoft.WinGet.DSC/WinGetPackage
           id: InstallWindowsSDK
@@ -33,6 +39,7 @@ properties:
           settings:
               id: Microsoft.WindowsSDK.10.0.28000
               source: winget
+              useLatest: true
 
         # Install Ripgrep and FD, which are both used by
         # Telescope and possibly other plugins
@@ -44,6 +51,7 @@ properties:
           settings:
               id: BurntSushi.ripgrep.MSVC
               source: winget
+              useLatest: true
 
         - resource: Microsoft.WinGet.DSC/WinGetPackage
           id: InstallFd
@@ -53,6 +61,7 @@ properties:
           settings:
               id: sharkdp.fd
               source: winget
+              useLatest: true
 
         - resource: Microsoft.WinGet.DSC/WinGetPackage
           id: InstallLLVM
@@ -62,6 +71,7 @@ properties:
           settings:
               id: LLVM.LLVM
               source: winget
+              useLatest: true
 
         - resource: Microsoft.WinGet.DSC/WinGetPackage
           id: InstallCMake
@@ -71,3 +81,4 @@ properties:
           settings:
               id: Kitware.CMake
               source: winget
+              useLatest: true
