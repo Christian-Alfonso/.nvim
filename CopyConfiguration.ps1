@@ -5,4 +5,7 @@
 # corresponding location in Windows (%LocalAppData%\nvim)
 #
 
-Copy-Item -Path (Join-Path $PSScriptRoot *) -Destination "$env:LOCALAPPDATA\nvim" -Recurse -Force -Exclude .*
+$Destination = Join-Path $env:LOCALAPPDATA "nvim"
+
+New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+Copy-Item -Path (Join-Path $PSScriptRoot *) -Destination $Destination -Recurse -Force -Exclude .*
