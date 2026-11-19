@@ -1,0 +1,27 @@
+# neovim-user.dsc.yaml
+#
+# Installs Neovim dependencies that are registered in the current user's WinGet
+# package scope. This configuration must run without elevation.
+
+properties:
+    configurationVersion: 0.2.0
+    resources:
+        - resource: Microsoft.WinGet.DSC/WinGetPackage
+          id: InstallRipgrep
+          directives:
+              description: Install Ripgrep (used by Telescope and other Neovim plugins)
+              allowPrerelease: false
+          settings:
+              id: BurntSushi.ripgrep.MSVC
+              source: winget
+              useLatest: true
+
+        - resource: Microsoft.WinGet.DSC/WinGetPackage
+          id: InstallFd
+          directives:
+              description: Install fd (fast file-finder, used by Telescope)
+              allowPrerelease: false
+          settings:
+              id: sharkdp.fd
+              source: winget
+              useLatest: true

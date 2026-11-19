@@ -79,6 +79,152 @@ function InstallRust() {
     Write-Host "Rust installation/update complete."
 }
 
+# Resolve the account for the elevated process. When setup is launched normally
+# and elevated through UAC, WindowsIdentity represents the same interactive
+# account. This is preferred over native session APIs because it avoids a
+# native-code dependency and does not require tying the scheduled task to
+# explorer.exe.
+function Get-LoggedOnDesktopUser {
+    $Identity = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+    if ($Identity) {
+        return $Identity
+    }
+
+    return "$env:COMPUTERNAME\$env:USERNAME"
+}
+
+# Prepare the stable worker script and validate that it can be launched from
+# the task. The configuration path is passed as an argument, not embedded into
+# generated script text, so worker source remains reproducible.
+function Resolve-WinGetUserWorker {
+    param(
+        [Parameter(Mandatory)]
+        [string] $ConfigurationPath
+    )
+
+    if (-not (Test-Path -LiteralPath $ConfigurationPath)) {
+        throw "WinGet DSC configuration not found: $ConfigurationPath"
+    }
+
+    $WorkerPath = Join-Path $PSScriptRoot "InvokeUserWinGetConfigure.ps1"
+    if (-not (Test-Path -LiteralPath $WorkerPath)) {
+        throw "WinGet user worker not found: $WorkerPath"
+    }
+
+    return @{
+        WorkerPath        = (Resolve-Path -LiteralPath $WorkerPath).Path
+        ConfigurationPath = (Resolve-Path -LiteralPath $ConfigurationPath).Path
+    }
+}
+
+# Register and start a temporary, non-elevated task for the logged-on desktop
+# user. Limited RunLevel is intentional: elevation reproduces the WinGet failure.
+function Register-WinGetUserTask {
+    param(
+        [Parameter(Mandatory)]
+        [string] $TaskName,
+        [Parameter(Mandatory)]
+        [string] $WorkerPath,
+        [Parameter(Mandatory)]
+        [string] $ConfigurationPath,
+        [Parameter(Mandatory)]
+        [string] $LoggedOnUser
+    )
+
+    $PowerShellExecutable = (Get-Process -Id $PID).Path
+    if (-not $PowerShellExecutable) {
+        throw "Could not determine the PowerShell executable used to run this script"
+    }
+
+    $Action = New-ScheduledTaskAction `
+        -Execute $PowerShellExecutable `
+        -Argument "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$WorkerPath`" -ConfigurationPath `"$ConfigurationPath`""
+
+    $Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddSeconds(5)
+    $Principal = New-ScheduledTaskPrincipal `
+        -UserId $LoggedOnUser `
+        -LogonType Interactive `
+        -RunLevel Limited
+
+    Write-Host "Scheduling user-scoped WinGet configuration for $LoggedOnUser..."
+    Register-ScheduledTask `
+        -TaskName $TaskName `
+        -Action $Action `
+        -Trigger $Trigger `
+        -Principal $Principal `
+        -Description "Run a dotfiles WinGet DSC configuration as the logged-on user" `
+        -Force | Out-Null
+
+    Start-ScheduledTask -TaskName $TaskName
+}
+
+# Wait for a task to leave Windows' pending/queued/running states and return
+# whether its process exited successfully.
+function Wait-WinGetUserTask {
+    param(
+        [Parameter(Mandatory)]
+        [string] $TaskName,
+        [int] $TimeoutSeconds = 900
+    )
+
+    $Deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+
+    do {
+        Start-Sleep -Seconds 1
+        $Task = Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop
+        $TaskResult = Get-ScheduledTaskInfo -TaskName $TaskName -ErrorAction Stop
+
+        if ($Task.State -in @("Running", "Queued")) {
+            continue
+        }
+
+        # Ready with 267011 means the task has not started yet. Any other
+        # Ready state after execution is the task's final result.
+        if ($Task.State -eq "Ready" -and $TaskResult.LastTaskResult -eq 267011) {
+            continue
+        }
+
+        if ($Task.State -eq "Ready") {
+            return $TaskResult.LastTaskResult
+        }
+    } while ((Get-Date) -lt $Deadline)
+
+    throw "Timed out waiting for scheduled WinGet user-scope configuration"
+}
+
+# Run the complete user-phase setup, ensuring the temporary task is always
+# removed even when registration or execution fails.
+function Invoke-WinGetConfigureAsUser {
+    param(
+        [Parameter(Mandatory)]
+        [string] $ConfigurationPath
+    )
+
+    $TaskName = "Dotfiles-Neovim-User-Packages"
+    $Worker = Resolve-WinGetUserWorker -ConfigurationPath $ConfigurationPath
+    $LoggedOnUser = Get-LoggedOnDesktopUser
+
+    try {
+        Register-WinGetUserTask `
+            -TaskName $TaskName `
+            -WorkerPath $Worker.WorkerPath `
+            -ConfigurationPath $Worker.ConfigurationPath `
+            -LoggedOnUser $LoggedOnUser
+
+        $ExitCode = Wait-WinGetUserTask -TaskName $TaskName
+        if ($ExitCode -ne 0) {
+            throw "User-scoped WinGet DSC configuration failed with exit code $ExitCode"
+        }
+
+        Write-Host "User-scoped WinGet DSC configuration completed successfully."
+    }
+    finally {
+        if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
+            Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+}
+
 # Create a temp folder for downloading the installer, if it does not exist
 $TempFolder = New-Item -ItemType Directory -Force -Path "$PSScriptRoot\temp"
 
@@ -88,10 +234,13 @@ $TempFolder = New-Item -ItemType Directory -Force -Path "$PSScriptRoot\temp"
 winget configure --enable
 
 # Install Neovim and its dependencies (Windows SDK, ripgrep, fd, CMake) via DSC.
-# .nvim/InstallDependencies.ps1 is still called below to add those tools to
-# the system PATH, since WinGet does not always do this automatically.
+# The elevated configuration excludes ripgrep and fd because those portable
+# packages must run in the logged-on user's non-elevated WinGet context.
 $NeovimConfig = "$PSScriptRoot\neovim.dsc.yaml"
 winget configure $NeovimConfig
+
+$NeovimUserConfig = "$PSScriptRoot\neovim-user.dsc.yaml"
+Invoke-WinGetConfigureAsUser -ConfigurationPath $NeovimUserConfig
 
 InstallVisualStudioBuildTools
 
