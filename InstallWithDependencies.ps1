@@ -7,6 +7,33 @@
 
 #Requires -RunAsAdministrator
 
+# Ask whether an existing manual installation should be updated. Defaulting
+# to No lets the script continue without changing a working installation.
+function Confirm-ManualUpdate {
+    param(
+        [Parameter(Mandatory)]
+        [string] $ComponentName
+    )
+
+    while ($true) {
+        $Response = Read-Host "Update existing $ComponentName installation? [y/N]"
+        switch ($Response.Trim().ToLowerInvariant()) {
+            "" { $ShouldUpdate = $false }
+            "n" { $ShouldUpdate = $false }
+            "no" { $ShouldUpdate = $false }
+            "y" { $ShouldUpdate = $true }
+            "yes" { $ShouldUpdate = $true }
+            default { Write-Host "Please answer yes or no."; continue }
+        }
+
+        if (-not $ShouldUpdate) {
+            Write-Host "Skipping $ComponentName update."
+        }
+
+        return $ShouldUpdate
+    }
+}
+
 # Idempotent Visual Studio Build Tools 2022 installer/updater
 # Installs or updates MSVC v143 toolset + Windows 11 SDK (22000)
 function InstallVisualStudioBuildTools() {
@@ -15,12 +42,6 @@ function InstallVisualStudioBuildTools() {
     Write-Host "Checking for existing Visual Studio Build Tools installation..."
 
     $VSBuildToolsInstaller = "$TempFolder\vs_buildtools.exe"
-
-    # Always download the latest VS Build Tools installer in case it is stale
-    Write-Host "Downloading Visual Studio Build Tools bootstrapper..."
-    Invoke-WebRequest `
-        -Uri "https://aka.ms/vs/17/release/vs_BuildTools.exe" `
-        -OutFile $VSBuildToolsInstaller
 
     # Add required components for Rust + Tree-sitter
     $Arguments = @(
@@ -38,17 +59,31 @@ function InstallVisualStudioBuildTools() {
     )
 
     if (Test-Path $BuildToolsPath) {
-        Write-Host "Existing Build Tools installation found. Updating components..."
+        Write-Host "Existing Build Tools installation found."
+        if (-not (Confirm-ManualUpdate -ComponentName "Visual Studio Build Tools")) {
+            return
+        }
     }
     else {
         Write-Host "No Build Tools installation found. Installing fresh..."
     }
 
-    # Install or update VS Build Tools
-    Start-Process -FilePath $VSBuildToolsInstaller -ArgumentList $Arguments -Wait -NoNewWindow
+    # Always download the latest VS Build Tools installer in case it is stale
+    Write-Host "Downloading Visual Studio Build Tools bootstrapper..."
+    Invoke-WebRequest `
+        -Uri "https://aka.ms/vs/17/release/vs_BuildTools.exe" `
+        -OutFile $VSBuildToolsInstaller
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "VS Build Tools failed to install: $LASTEXITCODE"
+    # Install or update VS Build Tools
+    $InstallerProcess = Start-Process `
+        -FilePath $VSBuildToolsInstaller `
+        -ArgumentList $Arguments `
+        -Wait `
+        -NoNewWindow `
+        -PassThru
+
+    if ($InstallerProcess.ExitCode -ne 0) {
+        throw "VS Build Tools failed to install: $($InstallerProcess.ExitCode)"
     }
 
     Write-Host "Visual Studio Build Tools installation/update complete."
@@ -59,21 +94,34 @@ function InstallVisualStudioBuildTools() {
 function InstallRust() {
     # Install or update Rust via rustup
     if (Get-Command "rustup" -ErrorAction SilentlyContinue) {
-        Write-Host "rustup found. Updating Rust toolchain..."
-        & rustup update
+        Write-Host "rustup found."
+        if (Confirm-ManualUpdate -ComponentName "Rust") {
+            Write-Host "Updating Rust toolchain..."
+            & rustup update
+
+            if ($LASTEXITCODE -ne 0) {
+                throw "Rust update failed: $LASTEXITCODE"
+            }
+        }
     }
     else {
         Write-Host "rustup not found. Downloading and installing Rust..."
         $RustupInstaller = "$TempFolder\rustup-init.exe"
         Invoke-WebRequest -Uri "https://win.rustup.rs/x86_64" -OutFile $RustupInstaller
-        & $RustupInstaller -y
+        $InstallerProcess = Start-Process `
+            -FilePath $RustupInstaller `
+            -ArgumentList "-y" `
+            -Wait `
+            -NoNewWindow `
+            -PassThru
+
         # rustup modifies the user PATH but the change won't be reflected in the
         # current session, so add cargo's bin directory manually for the steps below
         $Env:PATH = "$Env:USERPROFILE\.cargo\bin;$Env:PATH"
-    }
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "Rust failed to install: $LASTEXITCODE"
+        if ($InstallerProcess.ExitCode -ne 0) {
+            throw "Rust failed to install: $($InstallerProcess.ExitCode)"
+        }
     }
 
     Write-Host "Rust installation/update complete."
