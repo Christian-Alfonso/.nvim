@@ -104,6 +104,27 @@ require("lazy").setup({
             cond = not vim.g.vscode,
         },
 
+        -- Bridge Mason with Neovim's LSP configuration and ensure servers
+        -- are installed even before the first buffer is opened.
+        {
+            "mason-org/mason-lspconfig.nvim",
+            lazy = false,
+            opts = {
+                ensure_installed = {
+                    "clangd",
+                    "lua_ls",
+                    "rust_analyzer",
+                    "efm",
+                    "pyright",
+                },
+            },
+            dependencies = {
+                { "mason-org/mason.nvim", opts = {} },
+                "neovim/nvim-lspconfig",
+            },
+            cond = not vim.g.vscode,
+        },
+
         -- Autocompletion
         {
             'hrsh7th/nvim-cmp',
@@ -124,7 +145,6 @@ require("lazy").setup({
             event = { 'BufReadPre', 'BufNewFile' },
             dependencies = {
                 { 'hrsh7th/cmp-nvim-lsp' },
-                { 'williamboman/mason-lspconfig.nvim' },
             },
             config = function()
                 require("user.plugin.lspconfig")

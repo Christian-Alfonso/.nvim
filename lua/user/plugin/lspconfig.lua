@@ -1,5 +1,3 @@
-require("mason").setup()
-
 vim.lsp.enable({ "clangd", "lua_ls", "rust_analyzer", "efm", "pyright" })
 
 local cmp_capabilities = require('cmp_nvim_lsp').default_capabilities()
