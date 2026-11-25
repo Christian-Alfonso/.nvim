@@ -6,7 +6,7 @@
 #   - LLVM/Clang: provides the C compiler that Tree-sitter needs to compile parsers
 #
 # Note: After this file is applied, setup-windows.ps1 still calls
-# .nvim/InstallWithDependencies.ps1 to add ripgrep, fd, and LLVM to the
+# .nvim/setup/InstallWithDependencies.ps1 to add ripgrep, fd, and LLVM to the
 # system PATH via the registry. WinGet does not always add them
 # automatically, and that script handles that step.
 #

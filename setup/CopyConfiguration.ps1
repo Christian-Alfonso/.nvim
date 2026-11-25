@@ -6,6 +6,8 @@
 #
 
 $Destination = Join-Path $env:LOCALAPPDATA "nvim"
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
 New-Item -ItemType Directory -Path $Destination -Force | Out-Null
-Copy-Item -Path (Join-Path $PSScriptRoot *) -Destination $Destination -Recurse -Force -Exclude .*
+Copy-Item -LiteralPath (Join-Path $RepoRoot "init.lua") -Destination $Destination -Force
+Copy-Item -LiteralPath (Join-Path $RepoRoot "lua") -Destination $Destination -Recurse -Force
